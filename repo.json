@@ -1,7 +1,7 @@
 {
   "name": "Official ETMR Store",
   "version": 2,
-  "updated": "2026-09-14T17:23:56.994548Z",
+  "updated": "2026-10-15T12:35:20.559450Z",
   "apps": [
     {
       "id": "com.zhes.counter",
@@ -274,6 +274,27 @@
       },
       "createdAt": "2026-09-13T18:56:37+00:00",
       "updatedAt": "2026-09-14"
+    },
+    {
+      "id": "com.maka1.plastmafobia",
+      "name": "Plastmafobia",
+      "version": "1.0.0",
+      "author": "Maka1",
+      "description": "Пластмафобия — VR-игра в стиле Backrooms.\n\n*Всё знакомо. Всё не так.*\n\nТихие, пустые пространства, которые выглядят привычно, но ощущаются неправильно. Здесь нет боя и подсказок, только свет, тишина и чувство, что ты здесь не один. Передвигайся телепортом: смотри туда, куда хочешь попасть, и задержи взгляд. Осматривайся внимательно, потому что мелочи здесь важнее, чем кажется.",
+      "display": "scene",
+      "type": "universal",
+      "minApiVersion": 2,
+      "icon": "apps/com.maka1.plastmafobia/icon.png",
+      "preview": null,
+      "platforms": {
+        "Universal": {
+          "url": "apps/com.maka1.plastmafobia/app_universal.emr",
+          "size": 12095687,
+          "sha256": "3895c5ab5c1aca8ca54fce4cb613807966d43605058831df19d1f63e262db707"
+        }
+      },
+      "createdAt": "2026-10-15T00:20:22+00:00",
+      "updatedAt": "2026-10-15"
     }
   ]
 }
