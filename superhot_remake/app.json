@@ -1,0 +1,12 @@
+{
+  "id": "com.akundisco.superhotremake",
+  "name": "SUPERHOT Remake",
+  "version": "1.0.0",
+  "author": "AkunDiscoRemake",
+  "description": "SUPERHOT-inspired fan remake for VR Box. TIME MOVES ONLY WHEN YOU MOVE. Red crystal enemies that shatter, slow visible bullets you can dodge, slice with a katana or shoot down. No reloading: throw empty guns, snatch weapons from enemy hands, catch them mid-air. Pistol, shotgun, uzi, katana, bottles. 10 levels + ENDLESS mode, articulated fake hands, Joy-Con or hand gestures. Languages: English / Русский / Português.\nФанатский ремейк SUPERHOT для VR Box: ВРЕМЯ ДВИЖЕТСЯ, ТОЛЬКО КОГДА ДВИЖЕШЬСЯ ТЫ. Красные кристаллические враги, медленные пули, катана, броски оружия, 10 уровней и бесконечный режим.",
+  "entry": "scripts/main.lua",
+  "display": "scene",
+  "minApiVersion": 2,
+  "type": "lua",
+  "permissions": ["scene", "input", "audio", "storage", "ui"]
+}
