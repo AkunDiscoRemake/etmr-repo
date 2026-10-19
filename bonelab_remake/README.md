@@ -23,7 +23,7 @@ python3 tools/build_emrd.py     # -> dist/BoneLabRemake.emrd
 ## Novidades da 1.1.0 (pedidas pela moderação)
 
 - **Idiomas: English / Русский / Português.** Todos os textos e placas do cenário foram traduzidos.
-  O idioma inicial segue o teclado da plataforma, e dá pra trocar no botão **IDIOMA/LANGUAGE/ЯЗЫК**
+  O idioma padrão é o **inglês**; dá pra trocar no botão **IDIOMA/LANGUAGE/ЯЗЫК**
   do console ou no painel.
 - **Pegar ficou bem mais fácil e nada escorrega mais da mão:**
   - pra soltar, a mão tem que ficar *claramente aberta* por um instante; tremida do tracking não derruba;

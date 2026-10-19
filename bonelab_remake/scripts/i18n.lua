@@ -105,15 +105,13 @@ function T.cycle()
     T.set(T.LANGS[idx % #T.LANGS + 1])
 end
 
--- idioma inicial: escolha salva > idioma do teclado da plataforma > ingles
+-- idioma inicial: INGLES por padrao; so muda se o jogador escolheu outro (fica salvo)
 function T.init()
     local saved = A.getStr("lang", "")
-    if saved ~= "" then
-        T.lang = saved
-        return
+    T.lang = "en"
+    for _, l in ipairs(T.LANGS) do
+        if l == saved then T.lang = saved end
     end
-    local ok, kb = pcall(function() return EMRAPI.Keyboard:GetLanguage() end)
-    if ok and (kb == "ru" or kb == "en") then T.lang = kb else T.lang = "en" end
 end
 
 return T

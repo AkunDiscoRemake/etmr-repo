@@ -1,7 +1,7 @@
 {
   "id": "com.akundisco.bonelabremake",
   "name": "BoneLab Remake",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "AkunDiscoRemake",
   "description": "BONELAB-inspired fan remake for VR Box. Articulated fake hands that wrap around the guns, Joy-Con or hand gestures, force grab, pistol/SMG/pump shotgun/bat with physical magazines, AI bots (Grunt, Gunner, face-hugging Crab), ragdolls, explosive barrels, WAVES and SANDBOX modes. Languages: English / Русский / Português.\nФанатский ремейк BONELAB для VR Box: шарнирные руки, Joy-Con или жесты, притягивание предметов, оружие с магазинами, боты с ИИ (Грант, Стрелок, Краб на лицо), рэгдолл, взрывающиеся бочки, режимы ВОЛНЫ и ПЕСОЧНИЦА.",
   "entry": "scripts/main.lua",
