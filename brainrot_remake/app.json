@@ -8,6 +8,14 @@
   "display": "scene",
   "minApiVersion": 2,
   "type": "lua",
-  "permissions": ["scene", "input", "audio", "storage", "ui", "multiplayer"],
+  "permissions": [
+    "scene",
+    "input",
+    "audio",
+    "storage",
+    "ui",
+    "multiplayer"
+  ],
+  "photonAppId": "5ba147c5-74f3-423b-a430-4c405144979d",
   "photonRegion": "eu"
 }
