@@ -1,0 +1,12 @@
+{
+  "id": "com.akundisco.bonelabremake",
+  "name": "BoneLab Remake",
+  "version": "1.0.0",
+  "author": "AkunDiscoRemake",
+  "description": "Fan remake inspirado em BONELAB: maos fake articuladas que encaixam nas armas, Joy-Con ou gestos, pistola/SMG/escopeta/taco com pente fisico, bots com IA (Grunt, Atirador, Crab que pula no rosto), ragdoll, barris explosivos, modo ONDAS e SANDBOX.",
+  "entry": "scripts/main.lua",
+  "display": "scene",
+  "minApiVersion": 2,
+  "type": "lua",
+  "permissions": ["scene", "input", "audio", "storage", "ui"]
+}
