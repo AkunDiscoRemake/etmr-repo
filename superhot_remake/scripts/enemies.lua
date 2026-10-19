@@ -202,7 +202,7 @@ function E.kill(en, dir, force, hitPoint, cause)
         if s.b then pts[#pts + 1] = s.b; pts[#pts + 1] = V.mid(s.a, s.b) end
     end
     if hitPoint then for _ = 1, 4 do pts[#pts + 1] = hitPoint end end
-    G.fx.shatter(pts, dir, force or 3, 30, "shard")
+    G.fx.shatter(pts, dir, force or 3, 40, "shard")
     G.sound3D("sounds/shatter.wav", V.add(en.pos, { 0, 1.1, 0 }), 1, 0.9 + math.random() * 0.2)
     if en.weapon then E.disarm(en, V.add(V.scale(dir, 1.2), { 0, 1.2, 0 })) end
     A.destroy(en.rootObj)

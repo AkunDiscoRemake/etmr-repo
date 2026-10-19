@@ -317,3 +317,59 @@ function C6.step(t, dt)
     Cp.step(t, dt)
 end
 C6.report = S.report
+
+---------------------------------------------------------------------------
+-- showcase: pose para screenshot (tempo quase parado, cacos e balas no ar)
+---------------------------------------------------------------------------
+local Sh = {}
+SCENARIOS.showcase = Sh
+local sh = {}
+function Sh.setup() setHead({ 0, 0, 0 }, 0, 0); sh = {} end
+function Sh.step(t, dt)
+    local g = G()
+    setHead({ 0, 0, 0 }, -4, 4)
+    if not g or not g.items then return end
+    local Vm, I, P = V(), g.items, require("poses")
+    if t < 0.5 then restHand("left"); restHand("right"); return end
+    if not sh.started then
+        sh.started = true
+        g.game.startLevel(3)
+        g.player.god = true
+    end
+    local E = g.enemies
+    if t > 1.0 and not sh.spawned then
+        sh.spawned = true
+        E.clear()
+        sh.a = E.spawn({ -1.4, 0, -0.6 }, "pistol", { yaw = 165, passive = true })
+        sh.b = E.spawn({ 1.7, 0, 0.6 }, "uzi", { yaw = 200, passive = true })
+        sh.c = E.spawn({ 0.2, 0, 2.6 }, "katana", { yaw = 180, passive = true })
+        sh.d = E.spawn({ -0.4, 0, 1.2 }, "none", { yaw = 185, passive = true })
+    end
+    for _, k in ipairs({ "a", "b" }) do if sh[k] and not sh[k].dead then sh[k].aim = 1 end end
+    if sh.c and not sh.c.dead then sh.c.swing = 0.8; sh.c.vel = { 0, 0, -1.2 } end
+    if t > 2.6 and not sh.killed and sh.d then
+        sh.killed = true
+        E.kill(sh.d, { 0.3, 0.25, 1 }, 2.2, Vm.add(sh.d.pos, { 0, 1.3, 0 }), "bullet")
+        local head = g.rig.head
+        g.bullets.fire(Vm.add(sh.a.pos, { 0.35, 1.45, -0.3 }), Vm.norm(Vm.sub(Vm.add(head, { 0.2, -0.1, 0 }), Vm.add(sh.a.pos, { 0.35, 1.45, -0.3 }))), 14, "enemy", sh.a)
+        g.bullets.fire(Vm.add(sh.b.pos, { -0.3, 1.45, -0.3 }), Vm.norm(Vm.sub(Vm.add(head, { -0.3, -0.15, 0 }), Vm.add(sh.b.pos, { -0.3, 1.45, -0.3 }))), 14, "enemy", sh.b)
+    end
+    if t > 2.6 and t < 2.75 then g.time.force(1) elseif t >= 2.75 then g.time.force(0.002) end
+    -- pistola na mao direita apontada pro atirador
+    local held = I.holding.right and I.holding.right.item
+    if held then
+        local R = g.rig
+        local gp = Vm.add(Vm.add(R.head, Vm.scale(R.flatForward(), 0.38)), { 0.13, -0.13, 0 })
+        local tgt = sh.b and Vm.add(sh.b.pos, { 0, 1.5, 0 }) or Vm.add(R.head, { 0, 0, 5 })
+        handForObject("right", gp, Vm.basis(Vm.sub(tgt, gp), { 0, 1, 0 }), "grip", held.def, GRIP)
+    else
+        if not sh.gun then sh.gun = I.spawn("pistol", { 0.3, 1.3, -3.6 }, Vm.identity(), { rest = true }) end
+        local palm = Vm.poseApply(sh.gun.pos, sh.gun.B, P.get("pistol", "right").palm)
+        placeHand("right", palm, Vm.mulMM(sh.gun.B, P.get("pistol", "right").basis), t > 1.4 and GRIP or OPEN)
+    end
+    -- mao esquerda aberta, como no SUPERHOT
+    local R = g.rig
+    local f = R.flatForward()
+    placeHand("left", Vm.add(Vm.add(R.head, Vm.scale(f, 0.42)), { -0.22, -0.1, 0 }), Vm.basis(Vm.norm(Vm.add(f, { 0, 0.4, 0 })), { 1, 0.2, 0 }), OPEN)
+end
+function Sh.report() return "ok" end

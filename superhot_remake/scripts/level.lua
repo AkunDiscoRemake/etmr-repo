@@ -12,10 +12,10 @@ L.bounds = { -5, 5, -5, 5 }
 L.root = nil
 
 local WHITE = { 0.95, 0.95, 0.97 }
-local W_EMIT = { 0.12, 0.12, 0.13 }
+local W_EMIT = { 0.3, 0.3, 0.32 }
 local M_WALL = { smooth = 0.35, emit = W_EMIT }
-local M_FLOOR = { smooth = 0.75, emit = { 0.06, 0.06, 0.065 } }
-local M_BLOCK = { smooth = 0.5, emit = { 0.1, 0.1, 0.11 } }
+local M_FLOOR = { smooth = 0.75, emit = { 0.16, 0.16, 0.17 } }
+local M_BLOCK = { smooth = 0.5, emit = { 0.24, 0.24, 0.25 } }
 local GREY = { 0.72, 0.73, 0.76 }
 
 local rig

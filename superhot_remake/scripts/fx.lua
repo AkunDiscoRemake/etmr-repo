@@ -77,7 +77,7 @@ function F.shatter(points, dir, force, count, kind)
         local pos = V.add(p, jitter)
         local spread = V.norm({ math.random() - 0.5, math.random() * 0.8 - 0.1, math.random() - 0.5 })
         local v = V.add(V.scale(dir, force * (0.4 + math.random() * 0.9)), V.scale(spread, 1.2 + math.random() * 2.2))
-        local s = (kind == "shard") and (0.03 + math.random() * 0.07) or (0.015 + math.random() * 0.03)
+        local s = (kind == "shard") and (0.035 + math.random() * 0.08) or (0.015 + math.random() * 0.03)
         local sx, sy, sz = s * (0.6 + math.random()), s * (0.3 + math.random() * 0.7), s * (0.6 + math.random())
         A.scale(o, sx, sy, sz)
         A.pos(o, pos)
@@ -153,7 +153,7 @@ function F.update(gdt, dt)
     while i <= #active do
         local e = active[i]
         -- flashes usam tempo real (senao ficariam 10 s na tela com o tempo parado)
-        local step = (e.kind == "fade") and dt or gdt
+        local step = (e.kind == "fade" or e.kind == "spawn") and dt or gdt
         e.t = e.t + step
         if e.t >= e.life then
             release(e)
