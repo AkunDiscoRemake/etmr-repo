@@ -264,3 +264,23 @@ do
 end
 
 SCENARIO_HELPERS = S
+
+---------------------------------------------------------------------------
+-- EVENTOS: para renders (noite de Halloween, Candy, Lava) olhando a esteira
+---------------------------------------------------------------------------
+for _, ev in ipairs({ "night", "candy", "lava" }) do
+    local sc = {}
+    function sc.setup()
+        MOCK.storage.base = "1=tralalero:halloween:0,2=bombardiro:lava:0,3=cappuccino:candy:0"
+        MOCK.storage.tutDone = true
+    end
+    function sc.step(t, dt)
+        local G = S.G()
+        if not G or not G.localEnt then return end
+        local Lt = require("layout")
+        if not sc.forced and t > 0.5 then sc.forced = true; G.events.force(ev) end
+        if t < 2.5 then S.walkTo(Lt.frontPos(G.myBase), 0.4) else S.stop(); S.lookAt({ 0, 0, Lt.frontPos(G.myBase)[3] + 6 }) end
+    end
+    function sc.report() return "ok " .. ev end
+    SCENARIOS["ev_" .. ev] = sc
+end

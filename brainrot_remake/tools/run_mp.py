@@ -33,6 +33,7 @@ def make_client(actor, seed):
 
 def main():
     secs = float(sys.argv[1]) if len(sys.argv) > 1 else 90
+    leave_at = float(sys.argv[2]) if len(sys.argv) > 2 else None   # cliente 2 sai da sala nesse tempo
     A = make_client(1, 11)
     B = None
     clients = {1: A}
@@ -42,6 +43,10 @@ def main():
     for f in range(int(secs / dt)):
         t = (f + 1) * dt
         # B entra na sala aos 3 s
+        if leave_at and t >= leave_at and 2 in clients:
+            del clients[2]
+            A.execute("MOCK.mp.players[2] = nil; if MOCK.mp.onLeft then MOCK.mp.onLeft(2, 'p2') end")
+            print("cliente 2 saiu em %.1fs" % t)
         if t >= 3.0 and B is None:
             B = make_client(2, 22)
             clients[2] = B
@@ -85,8 +90,25 @@ def main():
         for e in errs[:6]:
             print("  ERRO:", e)
             ok = False
+    # sem bots duplicados / fantasmas no mestre
+    chk = A.eval("""(function()
+        local G = BRAINROT
+        local seen, dup, nb, nents = {}, 0, 0, 0
+        for _, e in ipairs(G.ents.order) do
+            if seen[e.id] then dup = dup + 1 end
+            seen[e.id] = true
+            if e.kind == "bot" then nents = nents + 1 end
+        end
+        for id, bot in pairs(G.ai.bots) do nb = nb + 1; if G.ents.get(id) ~= bot.ent then dup = dup + 100 end end
+        local stuck = 0
+        for i = 1, 8 do for s = 1, 10 do local x = G.bases.list[i].slots[s]; if x and x.c and not G.ents.get(x.c) then stuck = stuck + 1 end end end
+        return string.format("%d %d %d %d", dup, nb, nents, stuck)
+    end)()""").split()
+    print("mestre: duplicados=%s bots=%s ents_bot=%s vagas_presas=%s" % tuple(chk))
+    if chk[0] != "0" or chk[1] != chk[2] or chk[3] != "0":
+        ok = False
     # consistencia: esteira e bases iguais nos dois
-    if B is not None:
+    if B is not None and 2 in clients:
         ca = set(A.eval("(function() local t = {} for u in pairs(BRAINROT.conveyor.items) do t[#t+1] = u end return table.concat(t, ',') end)()").split(","))
         cb = set(B.eval("(function() local t = {} for u in pairs(BRAINROT.conveyor.items) do t[#t+1] = u end return table.concat(t, ',') end)()").split(","))
         diff = ca.symmetric_difference(cb)

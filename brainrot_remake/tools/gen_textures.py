@@ -141,10 +141,15 @@ TOASTS = {
     "online_fail": ("COULD NOT CONNECT", "НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ", "NÃO FOI POSSÍVEL CONECTAR", "red"),
     "online_lost": ("CONNECTION LOST\nBACK TO SOLO", "СВЯЗЬ ПОТЕРЯНА\nОДИНОЧНАЯ ИГРА", "CONEXÃO PERDIDA\nVOLTANDO AO SOLO", "red"),
     "online_noperm": ("ONLINE IS NOT AVAILABLE\nON THIS DEVICE", "ОНЛАЙН НЕДОСТУПЕН\nНА ЭТОМ УСТРОЙСТВЕ", "ONLINE INDISPONÍVEL\nNESTE APARELHO", "red"),
+    "spawn_god": ("A BRAINROT GOD\nIS ON THE CARPET!", "БОГ БРЕЙНРОТА\nНА ДОРОЖКЕ!", "UM DEUS BRAINROT\nAPARECEU NO TAPETE!", "gold"),
+    "spawn_secret": ("A SECRET BRAINROT\nIS ON THE CARPET!!!", "СЕКРЕТНЫЙ БРЕЙНРОТ\nНА ДОРОЖКЕ!!!", "UM BRAINROT SECRETO\nAPARECEU NO TAPETE!!!", "purple"),
     "rebirth_done": ("REBIRTH!\nMONEY MULTIPLIER UP", "ПЕРЕРОЖДЕНИЕ!\nМНОЖИТЕЛЬ ДЕНЕГ ВЫРОС", "RENASCEU!\nMULTIPLICADOR SUBIU", "purple"),
     "tut_welcome": ("WELCOME!\nWalk with the stick and BUY\nbrainrots on the RED CARPET\n(hold R)",
                     "ПРИВЕТ!\nХоди стиком и ПОКУПАЙ\nбрейнроты на КРАСНОЙ ДОРОЖКЕ\n(держи R)",
                     "BEM-VINDO!\nAnde com o analógico e COMPRE\nbrainrots no TAPETE VERMELHO\n(segure R)", "blue"),
+    "tut_menu": ("MENU (online, avatar, language):\npress  -  on the Joy-Con\nor show your LEFT PALM to your face",
+                 "МЕНЮ (онлайн, аватар, язык):\nнажми  -  на Joy-Con\nили покажи ЛЕВУЮ ЛАДОНЬ лицу",
+                 "MENU (online, avatar, idioma):\naperte  -  no Joy-Con\nou mostre a PALMA ESQUERDA pro rosto", "purple"),
     "tut_collect": ("Your brainrot makes money!\nStep on the GREEN PAD\nto collect it",
                     "Твой брейнрот приносит деньги!\nВстань на ЗЕЛЁНУЮ ПЛИТУ,\nчтобы забрать",
                     "Seu brainrot gera dinheiro!\nPise na PLACA VERDE\npara coletar", "green"),
@@ -203,6 +208,7 @@ SIGNS = {
     "sign_rebirth": ("REBIRTH", "ПЕРЕРОЖДЕНИЕ", "RENASCER", (170, 90, 255)),
     "lbl_lock": ("LOCK BASE", "ЗАКРЫТЬ БАЗУ", "TRANCAR BASE", (230, 60, 60)),
     "hud_carry": ("RUN TO YOUR BASE!", "БЕГИ НА СВОЮ БАЗУ!", "CORRE PRA SUA BASE!", (230, 60, 60)),
+    "sign_board": ("TOP PLAYERS", "ЛУЧШИЕ ИГРОКИ", "MELHORES JOGADORES", (255, 180, 40)),
 }
 
 ITEMS = {
@@ -399,6 +405,11 @@ def gen_world():
     d = ImageDraw.Draw(img)
     d.polygon([(64, 14), (110, 60), (84, 60), (84, 112), (44, 112), (44, 60), (18, 60)], fill=(255, 215, 80), outline=(140, 80, 0))
     save(img, "arrow.png")
+    # seta "para casa" (fundo transparente)
+    img = Image.new("RGBA", (128, 128), (20, 60, 30, 0))
+    d = ImageDraw.Draw(img)
+    d.polygon([(64, 8), (116, 62), (84, 62), (84, 120), (44, 120), (44, 62), (12, 62)], fill=(80, 255, 110, 255), outline=(0, 60, 10, 255), width=5)
+    img.save(os.path.join(IMG, "arrow_home.png"), optimize=True)
     # placa de coletar
     img = grad(256, 256, (110, 235, 120), (40, 160, 60))
     d = ImageDraw.Draw(img)

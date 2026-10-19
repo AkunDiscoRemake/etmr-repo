@@ -42,7 +42,7 @@ end
 
 -- tipos de mensagem que o jogo usa (registrados no MP de uma vez)
 N.TYPES = { "hello", "assign", "pose", "base", "conv", "conv_sold", "buy_req", "steal_warn",
-    "steal_req", "steal_ok", "steal_no", "steal_drop", "steal_done", "hit", "world", "fx", "bye" }
+    "steal_req", "steal_ok", "steal_no", "steal_drop", "steal_done", "steal_cancel", "hit", "world", "fx", "bye" }
 
 local function dispatch(kind, sender, json)
     local fn = N.handlers[kind]

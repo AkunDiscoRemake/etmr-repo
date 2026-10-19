@@ -292,7 +292,7 @@ end
 -- Doces
 ---------------------------------------------------------------------------
 function Pl.candy(pos)
-    local inc = G.bases.totalIncome(G.myBase)
+    local inc = G.myBase and G.bases.totalIncome(G.myBase) or 0
     local v = math.floor(25 + inc * 8)
     Pl.addMoney(v, V.add(pos, { 0, 0.6, 0 }))
     G.events.personal.sugar = math.min(30, (G.events.personal.sugar or 0) + 6)

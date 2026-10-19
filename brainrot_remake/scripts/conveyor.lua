@@ -36,6 +36,8 @@ function CV.spawn(uid, id, mut, z)
     it.price = K.price(id, it.mut)
     CV.items[uid] = it
     A.posXYZ(it.inst.root, 0, 0.06, it.z)
+    local rar = K.byId[id].rarity
+    if (rar == "god" or rar == "secret") and G.onRareSpawn then G.onRareSpawn(it, rar) end
     return it
 end
 
@@ -101,6 +103,13 @@ function CV.update(dt, t, viewer, authority)
             if near then M.animate(it.inst, t, "walk") end
             G.labels.want("cv" .. uid, { 0, 0.3 + it.inst.size * 1.25, it.z }, it.id, it.mut, it.price)
         end
+    end
+    -- de vez em quando o brainrot mais perto "fala" o nome
+    CV.chatT = (CV.chatT or 4) - dt
+    if CV.chatT <= 0 then
+        CV.chatT = 5 + G.rand() * 5
+        local it, d = CV.nearest(viewer, 7)
+        if it then G.sound3D("sounds/voice/" .. it.id .. ".wav", { 0, 1, it.z }, 0.75) end
     end
     -- comprados andando ate a base
     for i = #CV.walkers, 1, -1 do

@@ -154,6 +154,9 @@ def gen_sfx():
     for i, n in enumerate((60, 64, 67, 72, 76, 79, 84)):
         rb.append(at(tri(note(n), 0.5) * expdec(int(SR * 0.5), 5) * 0.3, i * 0.08, 1.4))
     write("rebirth.wav", mix(*rb, at(sine(lambda t: 200 + 800 * t, 1.0) * env(int(SR * 1.0), 0.3, 0.5) * 0.2, 0.2, 1.4)))
+    ch = mix(*[at((sine(note(n), 1.8) + 0.4 * sine(note(n) * 2, 1.8)) * env(int(SR * 1.8), 0.15, 0.9) * 0.16, 0, 2.0) for n in (60, 64, 67, 72, 76)])
+    sp = mix(*[at(sine(note(n), 0.25) * expdec(int(SR * 0.25), 10) * 0.2, 0.1 + i * 0.09, 2.0) for i, n in enumerate((84, 88, 91, 96, 100))])
+    write("rare.wav", mix(ch, sp))
     write("ui_click.wav", sine(1400, 0.03) * expdec(int(SR * 0.03), 80) * 0.5)
     write("ui_confirm.wav", np.concatenate([sine(988, 0.06) * 0.4, sine(1319, 0.12) * 0.4 * expdec(int(SR * 0.12), 15)]))
     # eventos

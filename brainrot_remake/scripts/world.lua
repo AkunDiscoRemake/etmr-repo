@@ -64,8 +64,8 @@ local function buildSky()
     W.sky.moon = prim("sphere", { -60, 60, 90 }, { 9, 9, 9 }, { 0.9, 0.92, 1.0 }, nil, nil, { emit = { 1.2, 1.25, 1.4 }, noShadow = true }, root)
     A.setVisible(W.sky.moon, false, 9, 9, 9)
     -- nuvens blocadas
-    for i = 1, 14 do
-        local a = i / 14 * math.pi * 2
+    for i = 1, 8 do
+        local a = i / 8 * math.pi * 2
         local r = 70 + (i % 3) * 18
         local c = A.empty("cloud", root, { math.sin(a) * r, 34 + (i % 4) * 5, math.cos(a) * r })
         for k = 1, 3 + i % 3 do
@@ -221,8 +221,8 @@ local function buildBase(i)
     -- vagas: pedestal + placa de coletar dinheiro
     for s = 1, Lt.SLOTS do
         local q = Lt.slotUV[s]
-        local pod = baseBox(i, q.u, q.v, 0.25, 1.3, 0.3, 1.4, { 0.96, 0.96, 0.98 }, nil, false, root, { smooth = 0.6 })
-        baseBox(i, q.u, q.v, 0.405, 1.36, 0.03, 1.46, trim, nil, false, root, { smooth = 0.7 })
+        -- pedestal na cor da base (uma peca so: menos objetos para o celular)
+        local pod = baseBox(i, q.u, q.v, 0.21, 1.3, 0.42, 1.4, V.lerp(trim, { 1, 1, 1 }, 0.35), nil, false, root, { smooth = 0.6 })
         base.podiums[s] = pod
         local pp = Lt.padPos(i, s)
         local pad = prim("cube", { pp[1], 0.23, pp[3] }, { 0.9, 0.06, 0.9 }, { 0.25, 0.85, 0.35 }, "images/pad.png", { 0, b.yaw, 0 }, { smooth = 0.6 }, root)
@@ -268,6 +268,33 @@ local function buildShop()
     end
 end
 
+-- placar dos mais ricos (em cima do arco do fim da esteira, virado para a esteira)
+local function buildBoard()
+    local z = Lt.CARPET.z1 + 0.2
+    local root = A.empty("board", W.root, { 0, 0, z })
+    for _, sx in ipairs({ -1, 1 }) do
+        prim("cube", { sx * 3.4, 3.2, 0.3 }, { 0.3, 6.4, 0.3 }, { 0.2, 0.2, 0.25 }, nil, nil, { metal = 0.6 }, root)
+    end
+    local bg = prim("cube", { 0, 7.35, 0.3 }, { 7.2, 3.9, 0.2 }, { 0.1, 0.12, 0.22 }, nil, nil, nil, root)
+    A.uiQuad(bg)
+    local title = prim("quad", { 0, 8.85, 0.18 }, { 4.2, 0.7, 1 }, { 1, 1, 1 }, nil, nil, nil, root)
+    A.uiQuad(title)
+    L10.bindTex(title, "sign_board")
+    W.board = { root = root, lines = {} }
+    for k = 1, 6 do
+        local t = Tx.new({ parent = root, pos = { 0, 8.22 - (k - 1) * 0.5, 0.15 }, h = 0.42, color = { 1, 1, 1 } })
+        W.board.lines[k] = t
+    end
+end
+
+function W.setBoard(rows)
+    if not W.board then return end
+    for k = 1, 6 do
+        local r = rows[k]
+        if r then Tx.set(W.board.lines[k], r[1], r[2]) else Tx.set(W.board.lines[k], "") end
+    end
+end
+
 local function buildRebirth()
     local R = Lt.REBIRTH
     local root = A.empty("rebirth", W.root)
@@ -296,7 +323,7 @@ local function buildDecor()
     -- arvores entre as bases e nos cantos
     for _, sx in ipairs({ -1, 1 }) do
         for _, z in ipairs({ -28, -14, 0, 14, 28 }) do tree(sx * 17.5, z, 1.0 + (z % 3) * 0.08) end
-        for _, z in ipairs({ -36, 36 }) do tree(sx * 9, z, 1.2) end
+        for _, z in ipairs({ -36, 36 }) do tree(sx * 13.5, z, 1.2) end
         tree(sx * 15, -38, 1.1)
         tree(sx * 15, 38, 1.1)
     end
@@ -305,7 +332,7 @@ local function buildDecor()
         local x = sx * (B[2] + 0.3)
         prim("cube", { x, 0.5, 0 }, { 0.1, 0.12, B[4] * 2 }, { 1, 1, 1 })
         prim("cube", { x, 0.9, 0 }, { 0.1, 0.12, B[4] * 2 }, { 1, 1, 1 })
-        for z = B[3], B[4], 3 do prim("cube", { x, 0.55, z }, { 0.14, 1.1, 0.14 }, { 1, 1, 1 }) end
+        for z = B[3], B[4], 6 do prim("cube", { x, 0.55, z }, { 0.14, 1.1, 0.14 }, { 1, 1, 1 }) end
     end
     for _, sz in ipairs({ -1, 1 }) do
         local z = sz * (B[4] + 0.3)
@@ -323,7 +350,7 @@ local function buildDecor()
     end
     -- flores
     local fc = { { 1, 0.3, 0.4 }, { 1, 0.85, 0.2 }, { 0.6, 0.4, 1 }, { 1, 1, 1 } }
-    for k = 0, 39 do
+    for k = 0, 19 do
         local x = (k % 2 == 0 and -1 or 1) * (6.8 + (k * 37 % 9) * 1.1)
         local z = -32 + (k * 53 % 64)
         if not Lt.baseAt({ x, 0, z }) then
@@ -342,6 +369,7 @@ function W.build(parent)
     for i = 1, 8 do buildBase(i) end
     buildShop()
     buildRebirth()
+    buildBoard()
     buildDecor()
     W.setSky("day")
 end

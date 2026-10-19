@@ -130,6 +130,21 @@ local function scanPressed()
     return res
 end
 
+-- analogico direito (so no Input System novo)
+local function readRightStick()
+    local x = 0
+    if nisOk then
+        pcall(function()
+            local n = NIS.Gamepad.all.Count
+            for d = 0, n - 1 do
+                local v = NIS.Gamepad.all[d].rightStick:ReadValue()
+                if math.abs(v.x) > math.abs(x) then x = v.x end
+            end
+        end)
+    end
+    return x
+end
+
 local function readStick()
     local x, y = 0, 0
     if nisOk then
@@ -460,6 +475,13 @@ function C.update(dt, rig)
         local _, tl = edge("turnL")
         local _, mn = edge("menu")
         C.turnR, C.turnL, C.menuDown = tr, tl, mn
+        local rx = readRightStick()
+        local dirR = rx > 0.6 and 1 or (rx < -0.6 and -1 or 0)
+        if dirR ~= 0 and (C.smoothTurnHint or dirR ~= C.rsLatch) then
+            if dirR > 0 then C.turnR = true else C.turnL = true end
+            C.lastPadActivity = now
+        end
+        C.rsLatch = dirR
     end
     -- andar por gesto: mao esquerda apontando e livre
     local lh = C.hands.left

@@ -41,32 +41,35 @@ local function part(parent, pos, scale, color, tex, rot, mat)
 end
 
 local function buildHair(av, st, head)
+    -- a cabeca tem centro em y = 0.6 S e topo em y = 1.2 S (no espaco do pescoco)
     if av.kind == "bacon" then
-        -- "bacon hair": mechas onduladas por cima e dos lados
-        part(head, { 0, 0.62 * S, -0.05 * S }, { 1.3 * S, 0.32 * S, 1.3 * S }, st.hair)
+        -- "bacon hair": mechas onduladas por cima, franja na testa, lados e nuca
+        part(head, { 0, 1.27 * S, -0.04 * S }, { 1.3 * S, 0.22 * S, 1.3 * S }, st.hair)
         for k = 0, 6 do
             local x = (k - 3) * 0.19 * S
-            local h = (0.22 + (k % 3) * 0.08) * S
-            part(head, { x, 0.78 * S + h * 0.3, 0.42 * S - (k % 2) * 0.12 * S }, { 0.2 * S, h, 0.5 * S }, k % 2 == 0 and st.hair or st.hair2, nil, { 25 + (k % 3) * 10, 0, (k - 3) * 6 })
+            local h = (0.2 + (k % 3) * 0.07) * S
+            part(head, { x, 1.38 * S + h * 0.3, 0.3 * S - (k % 2) * 0.25 * S }, { 0.2 * S, h, 0.55 * S }, k % 2 == 0 and st.hair or st.hair2, nil, { 25 + (k % 3) * 10, 0, (k - 3) * 6 })
+        end
+        for k, x in ipairs({ -0.36, -0.05, 0.3 }) do
+            part(head, { x * S, 1.12 * S, 0.6 * S }, { 0.3 * S, 0.2 * S, 0.14 * S }, k % 2 == 0 and st.hair2 or st.hair, nil, { 0, 0, (k - 2) * 14 })
         end
         for _, sx in ipairs({ -1, 1 }) do
-            part(head, { sx * 0.64 * S, 0.3 * S, -0.1 * S }, { 0.14 * S, 0.62 * S, 1.1 * S }, st.hair2)
-            part(head, { sx * 0.6 * S, 0.62 * S, 0.3 * S }, { 0.22 * S, 0.3 * S, 0.4 * S }, st.hair, nil, { 20, 0, sx * -15 })
+            part(head, { sx * 0.66 * S, 0.9 * S, -0.06 * S }, { 0.14 * S, 0.62 * S, 1.12 * S }, st.hair2)
         end
-        part(head, { 0, 0.32 * S, -0.62 * S }, { 1.2 * S, 0.8 * S, 0.16 * S }, st.hair2)
+        part(head, { 0, 0.82 * S, -0.66 * S }, { 1.26 * S, 0.9 * S, 0.14 * S }, st.hair2)
     else
-        -- "acorn": capacete arredondado de cabelo com franja reta (parece uma bolota)
-        local cap = A.prim("sphere", { parent = head, pos = { 0, 0.45 * S, -0.04 * S }, scale = { 1.42 * S, 1.05 * S, 1.42 * S }, color = st.hair, mat = { smooth = 0.5 } })
+        -- "acorn": cuia arredondada de cabelo com franja reta acima dos olhos (parece uma bolota)
+        local cap = A.prim("sphere", { parent = head, pos = { 0, 1.15 * S, -0.02 * S }, scale = { 1.42 * S, 0.72 * S, 1.42 * S }, color = st.hair, mat = { smooth = 0.5 } })
         av.parts[#av.parts + 1] = cap
-        part(head, { 0, 0.5 * S, 0.6 * S }, { 1.25 * S, 0.24 * S, 0.12 * S }, st.hair2)
+        part(head, { 0, 1.03 * S, 0.63 * S }, { 1.26 * S, 0.18 * S, 0.1 * S }, st.hair2)
         for _, sx in ipairs({ -1, 1 }) do
-            part(head, { sx * 0.66 * S, 0.05 * S, 0.0 }, { 0.16 * S, 0.9 * S, 1.0 * S }, st.hair)
+            part(head, { sx * 0.67 * S, 0.74 * S, -0.02 * S }, { 0.16 * S, 0.9 * S, 1.1 * S }, st.hair)
         end
-        part(head, { 0, 0.1 * S, -0.62 * S }, { 1.25 * S, 1.0 * S, 0.16 * S }, st.hair)
+        part(head, { 0, 0.7 * S, -0.65 * S }, { 1.28 * S, 1.1 * S, 0.16 * S }, st.hair)
         -- cabinho da bolota
-        A.prim("cylinder", { parent = head, pos = { 0, 1.0 * S, -0.02 * S }, scale = { 0.12 * S, 0.12 * S, 0.12 * S }, color = st.hair2 })
+        A.prim("cylinder", { parent = head, pos = { 0, 1.56 * S, -0.02 * S }, scale = { 0.12 * S, 0.1 * S, 0.12 * S }, color = st.hair2 })
         -- laco
-        part(head, { 0.48 * S, 0.78 * S, 0.1 * S }, { 0.3 * S, 0.2 * S, 0.12 * S }, { 1, 0.35, 0.6 }, nil, { 0, 0, 25 })
+        part(head, { 0.5 * S, 1.36 * S, 0.12 * S }, { 0.32 * S, 0.2 * S, 0.12 * S }, { 1, 0.35, 0.6 }, nil, { 0, 0, 25 })
     end
 end
 

@@ -81,7 +81,7 @@ function Gm.alarm(b, byName)
 end
 
 function Gm.stealStart(ent, b, s)
-    ent.stealing = { b = b, s = s }
+    ent.stealing = { b = b, s = s, t = G.realTime }
     if ownerIsLocal(b) and ent ~= myEnt() then
         Gm.alarm(b, ent.name)
     elseif online() and not isAuthBase(b) then
@@ -90,7 +90,11 @@ function Gm.stealStart(ent, b, s)
 end
 
 function Gm.stealCancel(ent)
+    local st = ent.stealing
     ent.stealing = nil
+    if st and online() and not isAuthBase(st.b) then
+        G.net.send("steal_cancel", { b = st.b, s = st.s, by = ent.id })
+    end
 end
 
 local function grantSteal(ent, b, s)
@@ -144,11 +148,11 @@ end
 -- chegou em casa com o brainrot
 function Gm.deliver(ent)
     local c = ent.carry
-    if not c then return end
+    if not c then return false end
     local home = ent.base
-    if not home or not isAuthBase(home) then return end
+    if not home or not isAuthBase(home) then return false end
     local s2 = G.bases.freeSlot(home)
-    if not s2 then return end
+    if not s2 then return false end
     G.ents.clearCarry(ent)
     G.bases.add(home, c.id, c.mut, s2)
     if isAuthBase(c.b) then
@@ -167,6 +171,7 @@ function Gm.deliver(ent)
         G.hud.toast("alert_lost", 3.5, ent.name, { 1, 0.4, 0.4 })
         Gm.save()
     end
+    return true
 end
 
 ---------------------------------------------------------------------------
@@ -288,7 +293,7 @@ local function offerPrompts(feet)
                 if bi == my then
                     local v = K.sellValue(slot.id, slot.mut)
                     P.offer({
-                        key = "sell" .. s, pos = sp, cardPos = V.add(top, { 0, 0.75, 0 }), kind = "sell", hold = 2.0,
+                        key = "sell" .. s, pos = sp, cardPos = V.add(top, { 0, 0.75, 0 }), kind = "sell", hold = 3.0, minDot = 0.75,
                         ok = true, info = "+$" .. K.fmt(v), infoColor = { 0.5, 1, 0.5 }, range = 1.6, prio = -0.5,
                         done = function()
                             if G.bases.list[my].slots[s] == slot then
@@ -363,6 +368,7 @@ function Gm.tutorial(ev)
     if ev == "start" and step == 0 then
         tut.step = 1
         EMRAPI.Timer:Delay(2.0, function() G.hud.toast("tut_welcome", 7) end)
+        EMRAPI.Timer:Delay(9.5, function() if (tut.step or 0) <= 1 then G.hud.toast("tut_menu", 6) end end)
     elseif ev == "bought" and step <= 1 then
         tut.step = 2
         EMRAPI.Timer:Delay(4.5, function() G.hud.toast("tut_collect", 6) end)
@@ -402,7 +408,10 @@ function Gm.save()
         local list = {}
         for s = 1, Lt.SLOTS do
             local slot = G.bases.list[G.myBase].slots[s]
-            if slot then list[#list + 1] = s .. "=" .. slot.id .. ":" .. slot.mut .. ":" .. math.floor(slot.acc) end
+            -- online, brainrot sendo carregado por outro jogador nao entra no save (evita duplicar)
+            if slot and not (slot.c and online()) then
+                list[#list + 1] = s .. "=" .. slot.id .. ":" .. slot.mut .. ":" .. math.floor(slot.acc)
+            end
         end
         A.setStr("base", table.concat(list, ","))
     end
@@ -482,14 +491,17 @@ local function clearWorld()
     G.myBase = nil
 end
 
-local function fillBots(maxBots)
+-- completa ate `want` bots (contando os que ja existem)
+local function fillBots(want)
+    local have = 0
+    for _ in pairs(G.ai.bots) do have = have + 1 end
     local free = {}
     for i = 1, 8 do if not G.bases.list[i].owner then free[#free + 1] = i end end
     -- riqueza variada: sempre tem alguem com coisa boa para roubar
     local wealth = { 0, 1, 2, 1, 3, 0, 2 }
-    local k = 0
+    local k = have
     for _, b in ipairs(free) do
-        if k >= maxBots then break end
+        if k >= want then break end
         k = k + 1
         G.ai.spawn(b, k, wealth[(k - 1) % #wealth + 1])
     end
@@ -541,6 +553,8 @@ local function masterAssign(id, name)
         for i = 1, 8 do
             local o = G.bases.list[i].owner
             if o and o:sub(1, 3) == "bot" then
+                local be = G.ents.get(o)
+                if be then Gm.dropCarry(be) end
                 G.ai.remove(o)
                 G.bases.clear(i)
                 free = i
@@ -623,7 +637,11 @@ local function setupNet()
     N.on("steal_warn", function(sender, t)
         if ownerIsLocal(t.b) then Gm.alarm(t.b, t.n) end
         local ent = G.ents.get(t.by)
-        if ent and not ent.auth then ent.stealing = { b = t.b, s = t.s } end
+        if ent and not ent.auth then ent.stealing = { b = t.b, s = t.s, t = G.realTime } end
+    end)
+    N.on("steal_cancel", function(sender, t)
+        local ent = G.ents.get(t.by)
+        if ent and not ent.auth then ent.stealing = nil end
     end)
     N.on("steal_req", function(sender, t)
         if not isAuthBase(t.b) then return end
@@ -714,6 +732,11 @@ local function setupNet()
                     G.bases.clear(i)
                     G.bases.assign(i, nil, "", false)
                 end
+            end
+            -- some com os bots antigos (eram remotos, do mestre que saiu)
+            for i = #G.ents.order, 1, -1 do
+                local e = G.ents.order[i]
+                if e.kind == "remote" and e.id:sub(1, 3) == "bot" then G.ents.remove(e.id) end
             end
             fillBots(math.max(0, 4 - G.net.playerCount()))
             sendAssign()
@@ -940,6 +963,11 @@ end
 function Gm.init(ctx)
     G = ctx
     G.onWalkerArrived = Gm.onWalkerArrived
+    G.onRareSpawn = function(it, rar)
+        if Gm.mode == "boot" then return end
+        G.hud.toast(rar == "secret" and "spawn_secret" or "spawn_god", 4, K.byId[it.id].name:upper():sub(1, 24), { 1, 0.9, 0.4 })
+        G.sound("sounds/rare.wav", 1)
+    end
     G.onUnlock = Gm.onUnlock
     G.incomeMult = function(b)
         if G.bases.list[b].owner == G.localId then return G.player.moneyMult() end
@@ -981,6 +1009,24 @@ function Gm.init(ctx)
         rebuildUI()
         G.hud.reloadTextures()
     end)
+end
+
+local boardT = 0
+local orphanT = 1
+local function updateBoard()
+    local rows = {}
+    for i = 1, 8 do
+        local b = G.bases.list[i]
+        if b.owner then rows[#rows + 1] = { name = b.name, inc = G.bases.totalIncome(i) * G.incomeMult(i), me = b.owner == G.localId } end
+    end
+    table.sort(rows, function(a, b) return a.inc > b.inc end)
+    local out = {}
+    for k = 1, math.min(6, #rows) do
+        local r = rows[k]
+        local nm = r.name:upper():sub(1, 12)
+        out[k] = { k .. " " .. nm .. " $" .. K.fmt(r.inc) .. "/S", r.me and { 1, 0.9, 0.3 } or { 1, 1, 1 } }
+    end
+    G.world.setBoard(out)
 end
 
 local statusT = 0
@@ -1048,6 +1094,31 @@ function Gm.update(dt)
         updatePadText()
         if ui.visible then Gm.updateStatus() end
     end
+    -- vaga "carregada" por alguem que nao existe mais volta para o dono
+    orphanT = orphanT - dt
+    if orphanT <= 0 then
+        orphanT = 1
+        for i = 1, 8 do
+            local b = G.bases.list[i]
+            if b.auth then
+                for s = 1, Lt.SLOTS do
+                    local slot = b.slots[s]
+                    if slot and slot.c and not G.ents.get(slot.c) then
+                        slot.orphan = (slot.orphan or 0) + 1
+                        if slot.orphan >= 4 then slot.orphan = nil; G.bases.setCarried(i, s, nil) end
+                    elseif slot then
+                        slot.orphan = nil
+                    end
+                end
+            end
+        end
+        -- marcas de "roubando" velhas expiram
+        for _, e in ipairs(G.ents.order) do
+            if e.stealing and e.stealing.t and G.realTime - e.stealing.t > 6.5 then e.stealing = nil end
+        end
+    end
+    boardT = boardT - dt
+    if boardT <= 0 then boardT = 3; updateBoard() end
     -- salvar de tempos em tempos
     saveT = saveT + dt
     if saveT > 15 then saveT = 0; Gm.save() end

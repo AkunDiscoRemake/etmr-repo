@@ -29,8 +29,13 @@ def main():
         if os.path.isfile(os.path.join(ROOT, f)):
             files.append(f)
     for d in INCLUDE_DIRS:
-        for name in sorted(os.listdir(os.path.join(ROOT, d))):
-            files.append(d + "/" + name)
+        for base, dirs, names in os.walk(os.path.join(ROOT, d)):
+            dirs.sort()
+            for name in sorted(names):
+                if name.startswith("_"):
+                    continue
+                rel = os.path.relpath(os.path.join(base, name), ROOT).replace(os.sep, "/")
+                files.append(rel)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for f in files:
             info = zipfile.ZipInfo(f, date_time=(2026, 10, 19, 0, 0, 0))

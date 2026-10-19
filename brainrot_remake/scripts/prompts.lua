@@ -50,7 +50,8 @@ local function choose(feet, look)
             to[2] = 0
             local l = V.len(to)
             local dot = l > 0.05 and V.dot(V.scale(to, 1 / l), look) or 1
-            if dot > -0.2 or d < 0.9 then
+            local okDot = dot > (c.minDot or -0.2) or (not c.minDot and d < 0.9)
+            if okDot then
                 local score = dot * 2 - d * 0.9 + (c.prio or 0)
                 if P.active and P.active.key == c.key then score = score + 0.6 end   -- estabilidade
                 if score > bs then best, bs = c, score end
@@ -63,7 +64,10 @@ end
 -- inputHeld: o jogador esta segurando o botao/fechando a mao
 function P.update(dt, feet, look, viewer, inputHeld)
     local c = choose(feet, look)
-    if c and P.active and c.key ~= P.active.key then P.progress = 0 end
+    if P.active and (not c or c.key ~= P.active.key) then
+        if P.progress > 0 and P.active.cancel then P.active.cancel() end
+        P.progress = 0
+    end
     P.active = c
     if not c then
         P.progress = 0

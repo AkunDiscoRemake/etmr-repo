@@ -37,7 +37,13 @@ local function diff() return DIFF[G.settings.difficulty or "normal"] or DIFF.nor
 -- cria um bot na base b (dados iniciais conforme a "riqueza" desejada)
 function AI.spawn(b, k, wealth)
     local n = AI.NAMES[(k - 1) % #AI.NAMES + 1]
-    local id = "bot" .. k
+    -- id unico (nunca reaproveita o de um bot/ent que ainda existe, inclusive remoto)
+    AI.seq = (AI.seq or 0)
+    local id
+    repeat
+        AI.seq = AI.seq + 1
+        id = "bot" .. AI.seq
+    until not AI.bots[id] and not G.ents.get(id)
     local ent = G.ents.spawnBot(id, n[1], n[2], n[3], b)
     ent.pos = Lt.spawnPos(b)
     ent.yaw = Lt.baseYaw(b)
@@ -186,6 +192,7 @@ local function think(bot)
         end
         bot.noticeT = bot.noticeT - 0.5
         if bot.noticeT <= 0 and not ent.carry then
+            if ent.stealing then ent.stealing = nil end
             bot.state = "defend"
             bot.chase = thief
             bot.noticeT = nil
@@ -203,10 +210,10 @@ local function think(bot)
         end
         return
     end
-    if bot.state == "steal" or bot.state == "stealing" or bot.state == "buy" then return end
+    if bot.state == "steal" or bot.state == "stealing" or bot.state == "buy" or bot.state == "defend" then return end
     -- 3) roubar
     bot.nextSteal = bot.nextSteal - 0.5
-    if bot.nextSteal <= 0 and G.bases.freeSlot(bot.b) then
+    if bot.nextSteal <= 0 and G.bases.count(bot.b) + G.conveyor.pendingFor(bot.b) < Lt.SLOTS then
         local tgt = pickStealTarget(bot)
         bot.nextSteal = d.stealGap[1] + G.rand() * (d.stealGap[2] - d.stealGap[1])
         if tgt then
@@ -319,7 +326,7 @@ local function update(bot, dt)
         if not ent.carry then bot.state = "home"; return end
         walk(bot, dt, speed)
         if Lt.inBase(bot.b, ent.pos, 0.5) then
-            G.game.deliver(ent)
+            if not G.game.deliver(ent) then G.game.dropCarry(ent) end
             bot.state = "home"
         end
     elseif st == "buy" then

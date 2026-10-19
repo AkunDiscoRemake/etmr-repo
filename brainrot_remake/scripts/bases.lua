@@ -17,7 +17,7 @@ local B = {}
 B.list = {}
 local G
 
-local LOD_NEAR = 27     -- m: modelos completos ate aqui
+local LOD_NEAR = 24     -- m: modelos completos ate aqui
 
 function B.init(ctx)
     G = ctx

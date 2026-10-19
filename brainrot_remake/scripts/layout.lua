@@ -1,11 +1,11 @@
 -- layout.lua — geometria do mapa (coordenadas locais do mundo do jogo, metros).
 --
---            z+ (fim da esteira, altar de RENASCER)
+--            z+ (fim da esteira; altar de RENASCER a esquerda)
 --   base4  |  esteira  |  base8
 --   base3  |  vermelha |  base7
 --   base2  |    (x=0)  |  base6
 --   base1  |           |  base5
---            z- (inicio da esteira, LOJA de itens)
+--            z- (inicio da esteira; LOJA de itens a direita)
 
 local V = require("vec")
 
@@ -13,8 +13,8 @@ local Lt = {}
 
 Lt.BOUNDS = { -19.5, 19.5, -41, 41 }
 Lt.CARPET = { halfW = 1.6, z0 = -34, z1 = 34 }
-Lt.SHOP = { 0, 0, -38.2 }
-Lt.REBIRTH = { 0, 0, 38.2 }
+Lt.SHOP = { 6.8, 0, -36.4 }      -- ao lado do inicio da esteira (visivel de longe)
+Lt.REBIRTH = { -6.8, 0, 36.6 }   -- ao lado do fim da esteira
 Lt.BASE_DEPTH = 10
 Lt.BASE_WIDTH = 11
 Lt.DOOR_HALF = 2.5

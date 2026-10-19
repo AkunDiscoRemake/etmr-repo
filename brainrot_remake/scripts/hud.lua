@@ -41,6 +41,11 @@ function Hd.init(ctx)
         A.setVisible(b.q, false)
         panel.boosts[i] = b
     end
+    panel.arrow = A.prim("quad", { parent = world, scale = { 0.3, 0.3, 1 }, color = { 1, 1, 1 } })
+    A.uiQuad(panel.arrow)
+    A.texture(panel.arrow, "images/arrow_home.png")
+    A.setVisible(panel.arrow, false)
+    panel.arrowOn = false
     panel.carry = quad(panel.root, { 0, 0.15, 0 }, 0.6, 0.11)
     A.setVisible(panel.carry, false)
     panel.carryOn = false
@@ -108,6 +113,14 @@ function Hd.update(dt)
         A.rotBasis(flash.root, V.basis(R.headB.f, R.headB.u))
         if flash.t <= 0 then A.setVisible(flash.root, false); flash.visible = false end
     end
+    -- seta deitada apontando para a porta da sua base (so quando carrega um brainrot)
+    if panel.arrowOn and G.myBase then
+        local door = require("layout").doorPos(G.myBase)
+        local ap = V.add(R.head, V.add(V.scale(fw, 0.75), { 0, -0.62, 0 }))
+        local d = { door[1] - ap[1], 0, door[3] - ap[3] }
+        A.pos(panel.arrow, ap)
+        A.rot(panel.arrow, 90, math.atan(d[1], d[3]) * V.DEG, 0)
+    end
     -- conteudo
     local Pl = G.player
     local m = math.floor(Pl.money)
@@ -145,6 +158,10 @@ function Hd.update(dt)
             end
         end
         local carrying = G.localEnt and G.localEnt.carry ~= nil
+        if carrying ~= panel.arrowOn then
+            panel.arrowOn = carrying
+            A.setVisible(panel.arrow, carrying, 0.3, 0.3, 1)
+        end
         if carrying ~= panel.carryOn then
             panel.carryOn = carrying
             if carrying then
