@@ -7,7 +7,7 @@
 --  * ROUBE dos outros: segure 5 s no brainrot e corra para casa
 --  * defenda a base com o taco e tranque com o botao vermelho (lasers!)
 --  * noite de Halloween, evento Candy, evento de Lava (raro) com boosts
---  * online (Photon) ou solo com bots rivais; avatares Bacon Hair e Acorn Girl
+--  * SO ONLINE (Photon): ate 8 jogadores por sala; avatares Bacon Hair e Acorn Girl
 --  * anda com o analogico do Joy-Con (ou gesto de apontar com a mao esquerda)
 -- ============================================================================
 
@@ -21,7 +21,6 @@ local W = require("world")
 local Bs = require("bases")
 local CV = require("conveyor")
 local E = require("ents")
-local AI = require("ai")
 local Pl = require("player")
 local Ev = require("events")
 local Pr = require("prompts")
@@ -33,7 +32,7 @@ local Gm = require("game")
 
 local G = {
     realTime = 0, frame = 0, settings = {},
-    rig = R, controls = C, hands = H, world = W, bases = Bs, conveyor = CV, ents = E, ai = AI,
+    rig = R, controls = C, hands = H, world = W, bases = Bs, conveyor = CV, ents = E,
     player = Pl, events = Ev, prompts = Pr, labels = Lb, hud = Hd, fx = F, net = N, game = Gm,
     localId = "me", myBase = nil, localEnt = nil,
 }
@@ -73,7 +72,6 @@ local function loadSettings()
     s.musicVol = A.getNum("musicVol", 0.5)
     s.gestureWalk = A.getBool("gestureWalk", true)
     s.smoothTurn = A.getBool("smoothTurn", false)
-    s.difficulty = A.getStr("difficulty", "normal")
     s.avatar = A.getStr("avatar", "bacon")
     s.outfit = A.getNum("outfit", s.avatar == "acorn" and 7 or 1)
     s.snapAngle = 45
@@ -104,14 +102,14 @@ local function boot()
     Bs.init(G)
     CV.init(G)
     E.init(G)
-    AI.init(G)
     Pl.init(G)
     Ev.init(G)
     Pr.init(G)
     Hd.init(G)
     N.init(G)
     Gm.init(G)
-    Gm.startSolo()
+    Gm.startLobby()
+    Gm.goOnline()
     A.log("pronto. CS=" .. tostring(A.hasCS) .. " MP=" .. tostring(N.available()))
 end
 
@@ -169,7 +167,6 @@ local function step(dt)
     local feet = { R.head[1], 0, R.head[3] }
     Pl.update(dt)
     local auth = Gm.update(dt)
-    AI.update(dt)
     CV.update(dt, G.realTime, feet, auth)
     Bs.update(dt, G.realTime, feet)
     E.update(dt, R.head)

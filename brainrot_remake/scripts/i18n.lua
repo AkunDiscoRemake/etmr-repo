@@ -11,7 +11,7 @@ T.lang = "en"
 
 local S = {
     title = { en = "RE:STEAL A BRAINROT VR", ru = "RE:STEAL A BRAINROT VR", pt = "RE:STEAL A BRAINROT VR" },
-    st_solo = { en = "SOLO with rival bots", ru = "ОДИНОЧНАЯ ИГРА с ботами", pt = "SOLO com bots rivais" },
+    st_offline = { en = "Offline - connecting...", ru = "Нет сети - подключение...", pt = "Offline - conectando..." },
     st_connecting = { en = "Connecting...", ru = "Подключение...", pt = "Conectando..." },
     st_online = { en = "ONLINE: room %s (%d players)", ru = "ОНЛАЙН: комната %s (%d игроков)", pt = "ONLINE: sala %s (%d jogadores)" },
     st_money = { en = "Money: $%s   Rebirths: %d", ru = "Деньги: $%s   Перерождения: %d", pt = "Dinheiro: $%s   Renascimentos: %d" },
@@ -19,10 +19,8 @@ local S = {
     padOn = { en = "Joy-Con: %s", ru = "Joy-Con: %s", pt = "Joy-Con: %s" },
     padOff = { en = "No Joy-Con (hand gestures work too)", ru = "Нет Joy-Con (работают жесты рук)", pt = "Sem Joy-Con (gestos das mãos funcionam)" },
     padCal = { en = "Joy-Con: calibrating...", ru = "Joy-Con: настройка...", pt = "Joy-Con: calibrando..." },
-    bOnline = { en = "PLAY ONLINE", ru = "ИГРАТЬ ОНЛАЙН", pt = "JOGAR ONLINE" },
-    bSolo = { en = "PLAY SOLO (bots)", ru = "ОДИН (боты)", pt = "JOGAR SOLO (bots)" },
+    bReconnect = { en = "Reconnect / new room", ru = "Переподключиться", pt = "Reconectar / outra sala" },
     bAvatar = { en = "Avatar: Bacon / Acorn", ru = "Аватар: Bacon / Acorn", pt = "Avatar: Bacon / Acorn" },
-    bDiff = { en = "Bot difficulty", ru = "Сложность ботов", pt = "Dificuldade dos bots" },
     bCalib = { en = "Calibrate Joy-Con", ru = "Настроить Joy-Con", pt = "Calibrar Joy-Con" },
     bLang = { en = "Language: EN", ru = "Язык: RU", pt = "Idioma: PT" },
     bRecenter = { en = "Recenter", ru = "Центрировать", pt = "Recentralizar" },

@@ -26,10 +26,7 @@ function sc.step(t, dt)
     if not G then return end
     local Lt = require("layout")
     if sc.state == "start" then
-        if t > 1 then
-            MOCK.buttons["PLAY ONLINE"]()
-            sc.state = "wait"
-        end
+        sc.state = "wait"   -- o jogo conecta sozinho
         return
     end
     if not G.localEnt or not G.myBase then return end

@@ -90,7 +90,7 @@ def main():
         for e in errs[:6]:
             print("  ERRO:", e)
             ok = False
-    # sem bots duplicados / fantasmas no mestre
+    # sem entidades duplicadas, sem bots e sem vagas presas no mestre
     chk = A.eval("""(function()
         local G = BRAINROT
         local seen, dup, nb, nents = {}, 0, 0, 0
@@ -99,13 +99,12 @@ def main():
             seen[e.id] = true
             if e.kind == "bot" then nents = nents + 1 end
         end
-        for id, bot in pairs(G.ai.bots) do nb = nb + 1; if G.ents.get(id) ~= bot.ent then dup = dup + 100 end end
         local stuck = 0
         for i = 1, 8 do for s = 1, 10 do local x = G.bases.list[i].slots[s]; if x and x.c and not G.ents.get(x.c) then stuck = stuck + 1 end end end
         return string.format("%d %d %d %d", dup, nb, nents, stuck)
     end)()""").split()
     print("mestre: duplicados=%s bots=%s ents_bot=%s vagas_presas=%s" % tuple(chk))
-    if chk[0] != "0" or chk[1] != chk[2] or chk[3] != "0":
+    if chk[0] != "0" or chk[1] != "0" or chk[2] != "0" or chk[3] != "0":
         ok = False
     # consistencia: esteira e bases iguais nos dois
     if B is not None and 2 in clients:

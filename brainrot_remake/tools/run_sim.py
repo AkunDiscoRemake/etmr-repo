@@ -39,6 +39,7 @@ def main():
         L.execute('MOCK.storage.lang = "%s"' % a.lang)
     if not a.nocs:
         L.execute("MOCK.installCS()")
+    L.execute("MOCK.installMP(1)")   # o jogo e so online: sala com um jogador (mestre)
     L.execute(open(os.path.join(ROOT, "tools", "scenarios.lua"), encoding="utf8").read())
     main_src = open(os.path.join(ROOT, "scripts", "main.lua"), encoding="utf8").read()
     L.execute(main_src)
@@ -71,6 +72,11 @@ def main():
                 MOCK.tickTweens()
                 OnUpdate(%f)
                 MOCK.tickPhysics(%f)
+                if MOCK.mp.wantJoin then
+                    MOCK.mp.inRoom = true; MOCK.mp.master = true; MOCK.mp.players[1] = "p1"
+                    local cb = MOCK.mp.wantJoin; MOCK.mp.wantJoin = nil; cb(true)
+                end
+                MOCK.mp.outbox = {}
             """ % (dt, dt, dt, dt))
         except Exception as e:  # erro fora do pcall do jogo (cenario/mock)
             lua_err = "frame %d: %s" % (f, e)

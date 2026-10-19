@@ -1,6 +1,6 @@
 # RE:Steal A Brainrot VR — EnJoyTheMR / VR Box
 
-O **Steal a Brainrot** em realidade virtual, feito para o app **EnJoyTheMR** (celular + óculos VR Box).
+O **Steal a Brainrot** em realidade virtual, **só online** (até 8 jogadores por sala, sem bots), feito para o app **EnJoyTheMR** (celular + óculos VR Box).
 Escrito em **Lua puro** (`display: "scene"`): mapa, brainrots, avatares e interface são montados em
 tempo real com a `EMRAPI`.
 
@@ -36,10 +36,8 @@ tempo real com a `EMRAPI`.
 - **Anúncios** quando aparece um Brainrot God ou Secret na esteira.
 - **Itens da loja:** Taco (grátis), Mão de Tapa (empurra longe), Mola de Velocidade, Armadilha (x3)
   e Capa da Invisibilidade.
-- **Bots rivais** no modo solo, com nome e avatar. Eles compram, coletam, trancam a base, tentam
-  **roubar de você** e perseguem quem rouba deles (com tempo de reação, dá pra escapar).
-- **Multiplayer online** (Photon, até 8 jogadores por sala). Se a sala estiver vazia, o mestre
-  completa com bots.
+- **Só online** (Photon, até 8 jogadores por sala). O jogo conecta sozinho ao abrir e reconecta se cair.
+  O menu tem **Reconectar / outra sala**.
 - **Avatares Bacon Hair e Acorn Girl** (estilo Roblox R6), com animação de andar, carregar, bater e
   ficar tonto. Suas mãos usam a pele e a manga do avatar.
 - **Placar** dos mais ricos, **renda offline** (metade do que os brainrots fariam enquanto você
@@ -71,7 +69,7 @@ O multiplayer usa o `EMRAPI.Multiplayer` (Photon Realtime). Para funcionar, o ap
 4. (Opcional, para o chat de voz) crie um segundo app do tipo **Voice** e coloque o ID em
    `"photonVoiceAppId"`.
 
-Sem o App ID, o botão **JOGAR ONLINE** avisa que não conectou e o jogo continua no solo com bots.
+O App ID deste projeto já está no `app.json`.
 
 ## Instalar / publicar
 
@@ -102,14 +100,13 @@ scripts/world.lua     mapa: céu, esteira, 8 bases, loja, altar, placar, decora�
 scripts/layout.lua    geometria do mapa (vagas, portas, caminhos)
 scripts/bases.lua     vagas, renda, placas de coletar, trava com laser, LOD
 scripts/conveyor.lua  esteira: sorteio, compra, brainrot andando até a base
-scripts/ents.lua      personagens (você, bots, jogadores online), carregar, pancada
+scripts/ents.lua      personagens (você e os jogadores online), carregar, pancada
 scripts/avatars.lua   avatares Bacon Hair / Acorn Girl (R6)
-scripts/ai.lua        IA dos bots
 scripts/player.lua    jogador local: itens, golpes, pulo, coletar, trancar, doces
 scripts/events.lua    dia/noite, Halloween, Candy, Lava, boosts, músicas
 scripts/prompts.lua   "segure para interagir"
 scripts/labels.lua, hud.lua, text3d.lua, fx.lua   interface 3D e efeitos
-scripts/net.lua       camada Photon (online) / solo
+scripts/net.lua       camada Photon (online)
 scripts/rig.lua, controls.lua, hands.lua, poses.lua, vec.lua, api.lua, i18n.lua   motor (VR, Joy-Con, mãos)
 tools/                geradores, empacotador, simulador e testes
 ```
@@ -117,8 +114,7 @@ tools/                geradores, empacotador, simulador e testes
 ## Testes (fora do celular)
 
 ```bash
-python3 tools/run_sim.py --scenario smoke --seconds 150    # compra, coleta, rouba, entrega, bate, eventos, tranca
-python3 tools/run_sim.py --scenario idle --seconds 300     # bots jogando sozinhos (roubos, compras)
+python3 tools/run_sim.py --scenario smoke --seconds 150    # sala com 1 jogador: compra, coleta, eventos, tranca
 python3 tools/run_sim.py --scenario smoke --lang ru --nocs # russo e sem acesso a CS.*
 python3 tools/run_mp.py 70                                 # ONLINE: 2 clientes num Photon falso
 python3 tools/run_mp.py 75 60                              # idem, e o cliente 2 sai da sala aos 60 s

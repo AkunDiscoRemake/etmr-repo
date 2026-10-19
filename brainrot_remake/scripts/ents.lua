@@ -1,4 +1,4 @@
--- ents.lua — personagens: o jogador local, bots (IA) e jogadores remotos (online).
+-- ents.lua — personagens: o jogador local e os jogadores remotos (online).
 -- Todos tem avatar Roblox, podem carregar um brainrot acima da cabeca, levar
 -- pancada (atordoado + empurrao) e segurar itens.
 
@@ -39,9 +39,6 @@ end
 
 function E.spawnLocal(id, name, avKind, outfit, base)
     return add(newEnt(id, name, "local", avKind, outfit, base))
-end
-function E.spawnBot(id, name, avKind, outfit, base)
-    return add(newEnt(id, name, "bot", avKind, outfit, base))
 end
 function E.spawnRemote(id, name, avKind, outfit, base)
     local e = newEnt(id, name, "remote", avKind, outfit, base)

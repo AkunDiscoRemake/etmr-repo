@@ -186,7 +186,6 @@ function Gm.hitEnt(target, dir, pow, stun, byId)
             G.ents.applyHit(target, dir, pow, stun)
             if target.stealing then target.stealing = nil end
             Gm.dropCarry(target)
-            G.ai.onHit(target.id, byId)
         end
     else
         G.net.send("hit", { to = target.id, d = { dir[1], dir[3] }, p = pow, s = stun, by = byId })
@@ -480,10 +479,10 @@ local function placeMe(b)
     loadBase(b)
     spawnLocal(b)
     teleportHome(b)
+    Gm.tutorial("start")
 end
 
 local function clearWorld()
-    G.ai.clear()
     G.ents.clear()
     G.localEnt = nil
     G.conveyor.clear()
@@ -491,32 +490,13 @@ local function clearWorld()
     G.myBase = nil
 end
 
--- completa ate `want` bots (contando os que ja existem)
-local function fillBots(want)
-    local have = 0
-    for _ in pairs(G.ai.bots) do have = have + 1 end
-    local free = {}
-    for i = 1, 8 do if not G.bases.list[i].owner then free[#free + 1] = i end end
-    -- riqueza variada: sempre tem alguem com coisa boa para roubar
-    local wealth = { 0, 1, 2, 1, 3, 0, 2 }
-    local k = have
-    for _, b in ipairs(free) do
-        if k >= want then break end
-        k = k + 1
-        G.ai.spawn(b, k, wealth[(k - 1) % #wealth + 1])
-    end
-end
-
-function Gm.startSolo()
-    if online() then G.net.leave() end
+-- Antes de entrar na sala: o jogador fica perto do inicio da esteira vendo o mapa
+function Gm.startLobby()
     clearWorld()
     G.localId = "me"
-    Gm.mode = "solo"
-    placeMe(2)
-    fillBots(7)
-    G.conveyor.prefill()
-    Gm.tutorial("start")
-    Gm.updateStatus()
+    Gm.mode = "connecting"
+    G.rig.recenter({ 0, 0, -30 })
+    G.player.reset()
 end
 
 ---------------------------------------------------------------------------
@@ -548,20 +528,6 @@ local function masterAssign(id, name)
     for i = 1, 8 do if G.bases.list[i].owner == id then return i end end
     local free = nil
     for i = 1, 8 do if not G.bases.list[i].owner then free = i; break end end
-    if not free then
-        -- tira um bot para dar lugar
-        for i = 1, 8 do
-            local o = G.bases.list[i].owner
-            if o and o:sub(1, 3) == "bot" then
-                local be = G.ents.get(o)
-                if be then Gm.dropCarry(be) end
-                G.ai.remove(o)
-                G.bases.clear(i)
-                free = i
-                break
-            end
-        end
-    end
     if not free then return nil end
     G.bases.assign(free, id, name, false)
     return free
@@ -624,8 +590,6 @@ local function setupNet()
             voice(it.id, { 0, 1, it.z })
             Gm.tutorial("bought")
         end
-        local bot = G.ai.bots[t.by]
-        if bot and it then bot.money = bot.money - price end
     end)
     N.on("buy_req", function(sender, t)
         if not master() then return end
@@ -718,41 +682,37 @@ local function setupNet()
                 G.bases.assign(i, nil, "", false)
             end
         end
-        if master() then
-            fillBots(math.max(0, 4 - G.net.playerCount()))
-            sendAssign()
-        end
+        if master() then sendAssign() end
     end)
     N.on("_master", function(actor)
+        -- novo mestre: passa a sortear a esteira e os eventos; reanuncia as bases
         if master() then
-            -- novo mestre: assume as bases dos bots (recria os bots)
-            for i = 1, 8 do
-                local o = G.bases.list[i].owner
-                if o and o:sub(1, 3) == "bot" and not G.ai.bots[o] then
-                    G.bases.clear(i)
-                    G.bases.assign(i, nil, "", false)
-                end
-            end
-            -- some com os bots antigos (eram remotos, do mestre que saiu)
-            for i = #G.ents.order, 1, -1 do
-                local e = G.ents.order[i]
-                if e.kind == "remote" and e.id:sub(1, 3) == "bot" then G.ents.remove(e.id) end
-            end
-            fillBots(math.max(0, 4 - G.net.playerCount()))
             sendAssign()
             sendAllBases()
         end
     end)
     N.on("_disconnected", function()
         G.hud.toast("online_lost", 4)
-        Gm.startSolo()
+        Gm.startLobby()
+        Gm.scheduleReconnect(3)
     end)
 end
 
+local reconnectId = nil
+function Gm.scheduleReconnect(delay)
+    if reconnectId then pcall(function() EMRAPI.Timer:Cancel(reconnectId) end) end
+    reconnectId = EMRAPI.Timer:Delay(delay or 8, function()
+        reconnectId = nil
+        Gm.goOnline()
+    end)
+end
+
+-- Conecta (o jogo e SO online). Se falhar, tenta de novo sozinho.
 function Gm.goOnline()
     if online() or G.net.state == "connecting" then return end
     if not G.net.available() then
-        G.hud.toast("online_noperm", 5)
+        G.hud.toast("online_noperm", 6)
+        Gm.scheduleReconnect(10)
         return
     end
     G.hud.toast("online_connecting", 6)
@@ -761,16 +721,16 @@ function Gm.goOnline()
         if not ok then
             G.hud.toast("online_fail", 5, tostring(err or ""):sub(1, 30))
             Gm.updateStatus()
+            Gm.scheduleReconnect(8)
             return
         end
-        -- entra no mundo online: guarda o que tinha, limpa bots e esteira
         Gm.save()
         clearWorld()
         G.localId = G.net.localId
         Gm.mode = "online"
+        Gm.helloT = 0
         if master() then
             placeMe(1 + (G.net.actor % 8))
-            fillBots(math.max(0, 4 - G.net.playerCount()))
             G.conveyor.prefill()
             sendAssign()
             sendAllBases()
@@ -778,6 +738,13 @@ function Gm.goOnline()
         sendHello()
         Gm.updateStatus()
     end)
+end
+
+-- botao do menu: sai e entra de novo (outra sala, se a atual estiver ruim)
+function Gm.reconnect()
+    if online() then G.net.leave() end
+    Gm.startLobby()
+    Gm.goOnline()
 end
 
 ---------------------------------------------------------------------------
@@ -794,7 +761,7 @@ function Gm.updateStatus(state)
     local s
     if state == "connecting" then s = t("st_connecting")
     elseif online() then s = t("st_online", G.net.roomName(), G.net.playerCount())
-    else s = t("st_solo") end
+    else s = t("st_offline") end
     s = s .. "\n" .. t("st_money", K.fmt(G.player.money), G.player.rebirths)
     pcall(function() EMRAPI.UI:SetText(ui.status, s) end)
 end
@@ -808,7 +775,7 @@ local function makeUI()
         U:SetColor(panel, 0.1, 0.12, 0.22, 0.95)
         local title = U:CreateText(panel, t("title"))
         U:SetPosition(title, 0, 230, 0); U:SetSize(title, 420, 40)
-        ui.status = U:CreateText(panel, t("st_solo"))
+        ui.status = U:CreateText(panel, t("st_offline"))
         U:SetPosition(ui.status, 0, 185, 0); U:SetSize(ui.status, 420, 60)
         ui.pad = U:CreateText(panel, t("padSearch"))
         U:SetPosition(ui.pad, 0, 140, 0); U:SetSize(ui.pad, 420, 34)
@@ -817,9 +784,8 @@ local function makeUI()
             U:SetPosition(b, x, y, 0); U:SetSize(b, 200, 42)
             return b
         end
-        btn(t("bOnline"), -105, 95, function() Gm.goOnline() end)
-        btn(t("bSolo"), 105, 95, function() Gm.startSolo() end)
-        btn(t("bAvatar"), -105, 48, function()
+        btn(t("bReconnect"), 105, 95, function() Gm.reconnect() end)
+        btn(t("bAvatar"), -105, 95, function()
             G.settings.avatar = G.settings.avatar == "bacon" and "acorn" or "bacon"
             G.settings.outfit = G.settings.avatar == "bacon" and 1 or 7
             A.setStr("avatar", G.settings.avatar); A.setNum("outfit", G.settings.outfit); A.save()
@@ -831,18 +797,10 @@ local function makeUI()
             end
             G.hud.toast(G.settings.avatar == "bacon" and "av_bacon" or "av_acorn", 2.5)
         end)
-        btn(t("bDiff"), 105, 48, function()
-            local order = { "easy", "normal", "hard" }
-            local idx = 1
-            for i, k in ipairs(order) do if k == G.settings.difficulty then idx = i end end
-            G.settings.difficulty = order[idx % 3 + 1]
-            A.setStr("difficulty", G.settings.difficulty); A.save()
-            G.hud.toast("diff_" .. G.settings.difficulty, 2.5)
-        end)
-        btn(t("bCalib"), -105, 1, function()
+        btn(t("bCalib"), -105, 48, function()
             if G.controls.startCalibration() then G.hud.toast("calib", 4) end
         end)
-        btn(t("bLang"), 105, 1, function() L10.cycle() end)
+        btn(t("bLang"), 105, 48, function() L10.cycle() end)
         local function toggle(text, key, x, y, apply)
             local tg = U:CreateToggle(panel, text, function(state)
                 G.settings[key] = state
@@ -988,9 +946,6 @@ function Gm.init(ctx)
     G.onMeteor = function(p, r)
         local me = myEnt()
         if me and V.distXZ(me.pos, p) < r + 0.4 then G.player.onHit(V.sub(me.pos, p), 4, 1.6) end
-        for _, e in ipairs(G.ents.order) do
-            if e.kind == "bot" and V.distXZ(e.pos, p) < r + 0.4 then Gm.hitEnt(e, V.sub(e.pos, p), 4, 1.6, nil) end
-        end
     end
     G.onLavaPool = function(p, r)
         local me = myEnt()
@@ -1047,7 +1002,7 @@ function Gm.update(dt)
         if not G.prompts.holding and me.stealing then Gm.stealCancel(me) end
     end
     -- esteira: quem manda sorteia
-    local auth = (not online()) or master()
+    local auth = online() and master()
     -- dispara prompts do jogador
     offerPrompts(feet)
     local C = G.controls
@@ -1063,7 +1018,6 @@ function Gm.update(dt)
         if poseT <= 0 then
             poseT = 0.1
             if me then G.net.send("pose", G.ents.pose(me)) end
-            for _, bot in pairs(G.ai.bots) do G.net.send("pose", G.ents.pose(bot.ent)) end
         end
         baseT = baseT - dt
         local periodic = baseT <= 0
@@ -1075,7 +1029,20 @@ function Gm.update(dt)
                 G.net.send("base", G.bases.snapshot(i))
             end
         end
-        -- jogadores/bots remotos que pararam de mandar pose
+        if not G.myBase then
+            Gm.helloT = (Gm.helloT or 0) + dt
+            if Gm.helloT > 5 then
+                Gm.helloT = 0
+                if master() then
+                    placeMe(1 + (G.net.actor % 8))
+                    sendAssign()
+                    sendAllBases()
+                else
+                    sendHello()
+                end
+            end
+        end
+        -- jogadores remotos que pararam de mandar pose
         for i = #G.ents.order, 1, -1 do
             local e = G.ents.order[i]
             if e.kind == "remote" and e.lastPose and G.realTime - e.lastPose > 12 then G.ents.remove(e.id) end

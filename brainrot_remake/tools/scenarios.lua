@@ -122,6 +122,7 @@ do
                     end
                 end
                 sc.tb = best
+                if not best then sc.state = "events"; sc.t0 = t; G.events.force("candy"); return end
                 sc.path = { Lt.doorPos(G.myBase), Lt.frontPos(G.myBase), Lt.frontPos(best.b), Lt.doorPos(best.b) }
             end
             local tb = sc.tb
@@ -199,7 +200,6 @@ do
         local G = S.G()
         local r = sc.rep
         local bots = 0
-        for _ in pairs(G.ai.bots) do bots = bots + 1 end
         return string.format("estado=%s comprou=%s coletou=%s carregou=%s entregou=%s acertos=%s trancou=%s soltou_em=%s dinheiro=%d base=%d bots=%d roubados_de_mim? noite=%s",
             sc.state, tostring(r.bought), tostring(r.collected), tostring(r.carried), tostring(r.delivered), tostring(r.hits),
             tostring(r.locked), tostring(r.dropAt), math.floor(G.player.money), G.bases.count(G.myBase), bots, tostring(G.events.isNight()))
@@ -207,40 +207,6 @@ do
     SCENARIOS.smoke = sc
 end
 
----------------------------------------------------------------------------
--- IDLE: fica parado na base e ve os bots jogarem (testa a IA e os roubos)
----------------------------------------------------------------------------
-do
-    local sc = { stats = { steals = 0, buys = 0 } }
-    function sc.setup()
-        MOCK.storage.base = "1=tralalero:none:0,2=noobini:gold:0,3=cappuccino:none:0"
-        MOCK.storage.tutDone = true
-        MOCK.storage.difficulty = "hard"
-    end
-    local lastCount = {}
-    function sc.step(t, dt)
-        local G = S.G()
-        if not G or not G.localEnt then return end
-        S.stop()
-        for i = 1, 8 do
-            local n = G.bases.count(i)
-            if lastCount[i] and n > lastCount[i] then sc.stats.buys = sc.stats.buys + 1 end
-            lastCount[i] = n
-        end
-        for _, e in ipairs(G.ents.order) do
-            if e.carry and not e.wasCarry then sc.stats.steals = sc.stats.steals + 1 end
-            e.wasCarry = e.carry ~= nil
-        end
-    end
-    function sc.report()
-        local G = S.G()
-        local tot = 0
-        for i = 1, 8 do tot = tot + G.bases.count(i) end
-        return string.format("roubos_iniciados=%d chegadas=%d total_brainrots=%d minha_base=%d esteira=%d",
-            sc.stats.steals, sc.stats.buys, tot, G.bases.count(G.myBase), (function() local n = 0 for _ in pairs(G.conveyor.items) do n = n + 1 end return n end)())
-    end
-    SCENARIOS.idle = sc
-end
 
 ---------------------------------------------------------------------------
 -- SHOWCASE: para renders (dinheiro alto, base cheia de brainrots raros)
