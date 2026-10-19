@@ -4,6 +4,7 @@
 
 local V = require("vec")
 local A = require("api")
+local L10 = require("i18n")
 
 local Pr = {}
 local G
@@ -11,22 +12,28 @@ local G
 Pr.list = {}
 
 local KINDS = {
-    crate = { size = 0.55, mass = 10, tex = "images/crate.png", color = { 1, 1, 1 }, r = 0.33, grab = false },
-    box = { size = 0.3, mass = 2, tex = "images/crate_small.png", color = { 1, 1, 1 }, r = 0.19, grab = true },
-    barrel = { size = 0.55, mass = 6, tex = "images/barrel.png", color = { 1, 1, 1 }, r = 0.36, grab = true, explosive = true, hp = 2 },
+    crate = { size = 0.55, mass = 10, tex = "crate", color = { 1, 1, 1 }, r = 0.33, grab = true },
+    box = { size = 0.3, mass = 2, tex = "crate_small", color = { 1, 1, 1 }, r = 0.19, grab = true },
+    barrel = { size = 0.55, mass = 6, tex = "barrel", color = { 1, 1, 1 }, r = 0.36, grab = true, explosive = true, hp = 2 },
 }
 
 local function build(p)
     local k = KINDS[p.kind]
     local o
     if p.kind == "barrel" then
-        o = A.prim("cylinder", { parent = G.rig.world, pos = p.home, scale = { 0.55, 0.45, 0.55 }, color = k.color, tex = k.tex, mat = { metal = 0.5, smooth = 0.55 } })
+        o = A.prim("cylinder", { parent = G.rig.world, pos = p.home, scale = { 0.55, 0.45, 0.55 }, color = k.color, mat = { metal = 0.5, smooth = 0.55 } })
         A.boxCollider(o)
     else
-        o = A.prim("cube", { parent = G.rig.world, pos = p.home, scale = { k.size, k.size, k.size }, color = k.color, tex = k.tex, mat = { metal = 0.1, smooth = 0.35 } })
+        o = A.prim("cube", { parent = G.rig.world, pos = p.home, scale = { k.size, k.size, k.size }, color = k.color, mat = { metal = 0.1, smooth = 0.35 } })
         A.boxCollider(o)
     end
     A.rot(o, 0, p.yaw or 0, 0)
+    if not p.texBound then
+        p.texBound = true
+        L10.bindTex(o, k.tex)
+    else
+        A.texture(o, L10.tex(k.tex))
+    end
     p.obj = o
     p.rb = A.addBody(o, k.mass, true)
     p.pos = V.copy(p.home)

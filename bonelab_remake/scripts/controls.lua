@@ -12,6 +12,7 @@
 
 local V = require("vec")
 local A = require("api")
+local L10 = require("i18n")
 
 local C = {}
 
@@ -45,6 +46,7 @@ C.turnL, C.turnR = false, false
 C.menuDown = false
 C.walkHeld = false
 C.gestureWalk = true
+C.stickyGrab = false
 C.padConnected = false
 C.padNames = ""
 C.calibrating = false
@@ -205,18 +207,13 @@ end
 ---------------------------------------------------------------------------
 -- Calibracao
 ---------------------------------------------------------------------------
+-- { binding, opcional? } — o texto de cada etapa vem do i18n ("cal_<binding>")
 local CAL_STEPS = {
-    { "right_trigger", "Joy-Con DIREITO:\naperte o GATILHO (ZR)", false },
-    { "right_grip",    "Joy-Con DIREITO:\naperte o botao de PEGAR (R)", false },
-    { "right_primary", "Joy-Con DIREITO:\naperte o botao para SOLTAR O PENTE (A)", true },
-    { "left_trigger",  "Joy-Con ESQUERDO:\naperte o GATILHO (ZL)", false },
-    { "left_grip",     "Joy-Con ESQUERDO:\naperte o botao de PEGAR (L)", false },
-    { "left_primary",  "Joy-Con ESQUERDO:\naperte o botao SECUNDARIO (seta baixo)", true },
-    { "turnR",         "Joy-Con DIREITO:\nbotao para VIRAR A DIREITA (X)\n(opcional)", true },
-    { "turnL",         "Joy-Con DIREITO:\nbotao para VIRAR A ESQUERDA (Y)\n(opcional)", true },
-    { "walk",          "Joy-Con ESQUERDO:\nbotao para ANDAR (segurar)\nso se o analogico nao funcionar (opcional)", true },
-    { "menu",          "Joy-Con ESQUERDO:\nbotao de MENU (-)\n(opcional)", true },
+    { "right_trigger", false }, { "right_grip", false }, { "right_primary", true },
+    { "left_trigger", false }, { "left_grip", false }, { "left_primary", true },
+    { "turnR", true }, { "turnL", true }, { "walk", true }, { "menu", true },
 }
+local function stepText(i) return L10.t("cal_" .. CAL_STEPS[i][1]) end
 
 local cal = { step = 0, t = 0, waitRelease = true, used = {} }
 
@@ -227,7 +224,7 @@ end
 
 function C.startCalibration()
     if not (legacyOk or nisOk) then
-        calSay("Joy-Con: a plataforma nao liberou acesso\nao gamepad (CS.UnityEngine.Input).\nUse os gestos das maos.")
+        calSay(L10.t("calNoAccess"))
         return false
     end
     C.calibrating = true
@@ -236,7 +233,7 @@ function C.startCalibration()
     cal.waitRelease = true
     cal.used = {}
     cal.newBind = {}
-    calSay(CAL_STEPS[1][2])
+    calSay(stepText(1))
     return true
 end
 
@@ -244,7 +241,7 @@ local function calFinish()
     for k, v in pairs(cal.newBind) do C.bind[k] = v end
     C.saveBindings()
     C.calibrating = false
-    calSay("Joy-Con calibrado!\nGatilho = atirar, Pegar = segurar.\nAnalogico = andar.")
+    calSay(L10.t("calDone"))
     A.sound("sounds/ui_confirm.wav")
 end
 
@@ -264,18 +261,18 @@ local function calUpdate(dt)
         cal.newBind[step[1]] = chosen
         cal.used[chosen] = true
         A.sound("sounds/ui_click.wav")
-    elseif step[3] and cal.t > 7 then
+    elseif step[2] and cal.t > 7 then
         cal.newBind[step[1]] = ""
     else
-        if math.floor(cal.t) ~= math.floor(cal.t - dt) and step[3] then
-            calSay(step[2] .. "\n(pula em " .. math.max(0, 7 - math.floor(cal.t)) .. "s)")
+        if math.floor(cal.t) ~= math.floor(cal.t - dt) and step[2] then
+            calSay(stepText(cal.step) .. "\n" .. L10.t("calSkip", math.max(0, 7 - math.floor(cal.t))))
         end
         return
     end
     cal.step = cal.step + 1
     cal.t = 0
     cal.waitRelease = true
-    if cal.step > #CAL_STEPS then calFinish() else calSay(CAL_STEPS[cal.step][2]) end
+    if cal.step > #CAL_STEPS then calFinish() else calSay(stepText(cal.step)) end
 end
 
 function C.cancelCalibration()
@@ -370,14 +367,29 @@ function C.update(dt, rig)
             h.palm = pc
         end
 
-        -- gestos (com histerese)
+        -- gestos (com histerese + tolerancia ao tremor do tracking)
+        -- Fechar e facil (curl > 0.5 ou o gesto "Fist" da plataforma). Para SOLTAR, a mao
+        -- precisa ficar claramente aberta por um tempo — um frame ruim nao derruba a arma.
         local gripCurl = (h.curl[3] + h.curl[4] + h.curl[5]) / 3
-        if h.gestGrip then
-            if gripCurl < 0.32 then h.gestGrip = false end
-        else
-            if gripCurl > 0.62 then h.gestGrip = true end
+        local platFist = false
+        if h.tracked and ok then
+            local g = rig.gesture(side)
+            platFist = g == "Fist"
         end
-        if not h.tracked then h.gestGrip = false end
+        if h.gestGrip then
+            if not h.tracked then
+                -- sem tracking: mantem como estava (nao solta o que esta na mao)
+                h.openT = 0
+            elseif gripCurl < (h.busy and 0.2 or 0.3) and not platFist then
+                h.openT = (h.openT or 0) + dt
+                if h.openT > (h.busy and 0.3 or 0.12) then h.gestGrip = false; h.openT = 0 end
+            else
+                h.openT = 0
+            end
+        elseif h.tracked and (gripCurl > 0.5 or platFist) then
+            h.gestGrip = true
+            h.openT = 0
+        end
         if h.gestTrig then
             if h.curl[2] < 0.35 then h.gestTrig = false end
         else
@@ -398,6 +410,20 @@ function C.update(dt, rig)
 
         local grip
         if usingPad then grip = pGrip else grip = h.gestGrip end
+        -- modo alternado: cada "fechar" alterna entre segurar e soltar
+        if C.stickyGrab then
+            local closedEdge = grip and not h.rawGrip
+            h.rawGrip = grip
+            if closedEdge then
+                if h.busy then h.toggled = false else h.toggled = true; h.toggleT = 0 end
+            end
+            if h.toggled and not h.busy then
+                -- fechou a mao mas nao pegou nada: depois de meio segundo volta a "solto"
+                h.toggleT = (h.toggleT or 0) + dt
+                if h.toggleT > 0.5 then h.toggled = false end
+            end
+            grip = h.toggled == true
+        end
         h.gripDown = grip and not h.grip
         h.gripUp = (not grip) and h.grip
         h.grip = grip

@@ -23,6 +23,7 @@ local Pr = require("props")
 local Cb = require("combat")
 local Pl = require("player")
 local Gm = require("game")
+local L10 = require("i18n")
 
 -- contexto compartilhado entre modulos
 local G = {
@@ -57,12 +58,14 @@ local function loadSettings()
     s.gestureWalk = A.getBool("gestureWalk", true)
     s.passthrough = A.getBool("passthrough", false)
     s.smoothTurn = A.getBool("smoothTurn", false)
+    s.stickyGrab = A.getBool("stickyGrab", false)
     s.snapAngle = 45
     G.aimAssist = s.aimAssist
 end
 
 local function boot()
     loadSettings()
+    L10.init()
     pcall(function() EMRAPI.Camera:SetBackground(G.settings.passthrough and "show" or "hide") end)
 
     R.init(L.playerSpawn, G.settings.height)
@@ -73,6 +76,7 @@ local function boot()
     H.init(R.world)
     C.init()
     C.gestureWalk = G.settings.gestureWalk
+    C.stickyGrab = G.settings.stickyGrab
 
     Wp.init(G)
     I.init(G)
@@ -86,10 +90,10 @@ local function boot()
     Pr.setup()
 
     Gm.toHub()
-    Gm.message("BEM-VINDO AO LAB", 3, "welcome")
+    Gm.message("welcome", 3)
     if C.padConnected and not A.getBool("calibrated", false) then
         EMRAPI.Timer:Delay(3.5, function()
-            Gm.message("Joy-Con detectado! Aperte CALIBRAR no console", 3, "calib")
+            Gm.message("padFound", 3)
         end)
     end
     A.log("pronto. CS=" .. tostring(A.hasCS) .. " material=" .. tostring(A.matOk))

@@ -160,7 +160,7 @@ local function tryGrab(side, h)
             for gpName, gp in pairs(it.def.grabs) do
                 if it.holders[gpName] == nil and not (gpName == "fore" and it.holders.grip == nil and isHeld(it)) then
                     local d = V.dist(gpPalm(it, gpName, side), h.palm)
-                    local lim = gp.r
+                    local lim = gp.r * 1.5
                     if it.state ~= "rest" and not isHeld(it) then lim = lim * 1.4 end
                     if d < lim then
                         local score = d - (gp.main and 0.02 or 0)
@@ -209,8 +209,41 @@ local function tryGrab(side, h)
         best.holders[bestGp] = side
         best.state = "held"
         best.settleT = nil
+        best.grabFrom = { pos = V.copy(best.pos), B = best.B }
+        best.grabT, best.grabDur = 0, 0.1
         I.holding[side] = { item = best, gp = bestGp }
         if best.def.kind == "gun" then I.lastGunType = best.type end
+        A.sound3D("sounds/grab.wav", h.palm, 0.7)
+        return true
+    end
+
+    -- PUXAR A DISTANCIA (force grab): palma apontada para o item, ate 3 m
+    local palmar = side == "right" and V.scale(h.basis.r, -1) or h.basis.r
+    local fbest, fscore = nil, math.cos(20 * V.RAD)
+    -- mao apontando (gesto de andar) nao puxa nada: precisa da mao fechada inteira ou do Joy-Con
+    local forceOk = h.usingPad or h.curl[2] > 0.4
+    for _, it in ipairs(forceOk and I.list or {}) do
+        if not it.dead and not isHeld(it) then
+            local v = V.sub(it.pos, h.palm)
+            local d = V.len(v)
+            if d > 0.15 and d < 3 then
+                local c = V.dot(V.scale(v, 1 / d), palmar)
+                -- pontua por alinhamento (e um pouco por proximidade)
+                local score = c - d * 0.01
+                if score > fscore then fbest, fscore = it, score end
+            end
+        end
+    end
+    if fbest then
+        local gpName = "grip"
+        fbest.holders[gpName] = side
+        fbest.state = "held"
+        fbest.settleT = nil
+        fbest.grabFrom = { pos = V.copy(fbest.pos), B = fbest.B }
+        fbest.grabT, fbest.grabDur = 0, 0.28
+        I.holding[side] = { item = fbest, gp = gpName }
+        if fbest.def.kind == "gun" then I.lastGunType = fbest.type end
+        A.sound3D("sounds/swing.wav", fbest.pos, 0.5, 1.4)
         A.sound3D("sounds/grab.wav", h.palm, 0.7)
         return true
     end
@@ -414,10 +447,11 @@ function I.update(dt)
         local h = C.hands[side]
         local hold = I.holding[side]
         if hold then
-            if h.gripUp or not h.tracked then release(side, h) end
+            -- so solta quando a mao abre de verdade; se o tracking piscar, o item fica na mao
+            if h.gripUp then release(side, h) end
         elseif h.tracked then
             -- janela de 0.3 s: apertar "pegar" um pouco antes de encostar tambem pega
-            if h.gripDown then h.grabWindow = 0.3 end
+            if h.gripDown then h.grabWindow = 0.45 end
             if h.grip and (h.grabWindow or 0) > 0 then
                 h.grabWindow = h.grabWindow - dt
                 if tryGrab(side, h) then h.grabWindow = 0 end
@@ -435,7 +469,16 @@ function I.update(dt)
         if not it.dead then
             if isHeld(it) then
                 local pos, R = heldTarget(it)
-                if it.prevHeld ~= true then
+                if it.grabFrom then
+                    -- transicao suave ate a mao (rapida ao pegar perto, voando ao puxar de longe)
+                    it.grabT = it.grabT + dt
+                    local k = math.min(1, it.grabT / it.grabDur)
+                    k = k * k * (3 - 2 * k)
+                    local arc = math.sin(k * math.pi) * 0.15 * (it.grabDur > 0.2 and 1 or 0)
+                    it.pos = V.add(V.lerp(it.grabFrom.pos, pos, k), { 0, arc, 0 })
+                    it.B = V.slerpBasis(it.grabFrom.B, R, k)
+                    if k >= 1 then it.grabFrom = nil end
+                elseif it.prevHeld ~= true then
                     it.pos, it.B = pos, R
                 else
                     it.pos = V.lerp(it.pos, pos, V.smoothK(45, dt))

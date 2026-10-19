@@ -26,6 +26,7 @@ def main():
     ap.add_argument("--out", default=os.path.join(ROOT, "tools", "out"))
     ap.add_argument("--tracking", default="6dof")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--lang", default="", help="forca o idioma salvo (en/ru/pt)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
 
@@ -34,6 +35,8 @@ def main():
     L.execute("math.randomseed(%d)" % a.seed)
     L.execute(open(os.path.join(ROOT, "tools", "mock_emrapi.lua"), encoding="utf8").read())
     L.execute('MOCK.trackingMode = "%s"' % a.tracking)
+    if a.lang:
+        L.execute('MOCK.storage.lang = "%s"' % a.lang)
     if not a.nocs:
         L.execute("MOCK.installCS()")
     L.execute(open(os.path.join(ROOT, "tools", "scenarios.lua"), encoding="utf8").read())
@@ -99,7 +102,15 @@ def main():
         print("ERRO LUA (fora do jogo):", lua_err)
     for e in errors[:10]:
         print("ERRO:", e)
-    if lua_err or errors:
+    tex = L.eval("MOCK.textures") or {}
+    missing = [k for k in tex if not os.path.isfile(os.path.join(ROOT, k))]
+    for m in missing:
+        print("TEXTURA FALTANDO:", m)
+    snd = [L.eval("MOCK.sounds")[i] for i in range(1, L.eval("#MOCK.sounds") + 1)]
+    missing_snd = sorted(set(x for x in snd if not os.path.isfile(os.path.join(ROOT, x))))
+    for m in missing_snd:
+        print("SOM FALTANDO:", m)
+    if lua_err or errors or missing or missing_snd:
         sys.exit(1)
     print("OK")
 

@@ -109,7 +109,7 @@ end
 
 function Pl.crabOn(bot)
     Pl.crabs = Pl.crabs + 1
-    if G.game then G.game.message("ARRANQUE O CRAB DO ROSTO!", 2.5) end
+    if G.game then G.game.message("crab", 2.5) end
 end
 
 function Pl.crabOff()

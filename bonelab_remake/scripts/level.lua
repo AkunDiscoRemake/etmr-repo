@@ -4,6 +4,7 @@
 
 local V = require("vec")
 local A = require("api")
+local L10 = require("i18n")
 
 local L = {}
 
@@ -102,7 +103,8 @@ function L.build(world, rig)
 
     -- mesa de armas
     local t = L.tableTop
-    box({ t[1], t[2] - 0.03, t[3] }, { 1.7, 0.06, 0.62 }, { tex = "images/table.png", mat = { metal = 0.6, smooth = 0.6 } })
+    local tableTop = box({ t[1], t[2] - 0.03, t[3] }, { 1.7, 0.06, 0.62 }, { mat = { metal = 0.6, smooth = 0.6 } })
+    L10.bindTex(tableTop, "table")
     for _, lx in ipairs({ -0.78, 0.78 }) do
         for _, lz in ipairs({ -0.25, 0.25 }) do
             deco("cube", { t[1] + lx, (t[2] - 0.06) / 2, t[3] + lz }, { 0.05, t[2] - 0.06, 0.05 }, { 0.15, 0.15, 0.17 }, { metal = 0.8, smooth = 0.6 })
@@ -113,8 +115,8 @@ function L.build(world, rig)
 
     -- placas/posters
     deco("quad", { -S + 0.03, 3.4, 0 }, { 6, 2.4, 1 }, { 1, 1, 1 }, { emit = { 0.06, 0.06, 0.06 } }, "images/poster_logo.png", { 0, -90, 0 })
-    deco("quad", { S - 0.03, 3.4, 2 }, { 4, 2, 1 }, { 1, 1, 1 }, { emit = { 0.04, 0.04, 0.04 } }, "images/poster_lab.png", { 0, 90, 0 })
-    deco("quad", { 0, 4.9, S - 0.03 }, { 3.6, 0.9, 1 }, { 1, 1, 1 }, { emit = { 0.05, 0.05, 0.05 } }, "images/sign_arena.png", { 0, 0, 0 })
+    L10.bindTex(deco("quad", { S - 0.03, 3.4, 2 }, { 4, 2, 1 }, { 1, 1, 1 }, { emit = { 0.04, 0.04, 0.04 } }, nil, { 0, 90, 0 }), "poster_lab")
+    L10.bindTex(deco("quad", { 0, 4.9, S - 0.03 }, { 3.6, 0.9, 1 }, { 1, 1, 1 }, { emit = { 0.05, 0.05, 0.05 } }, nil, { 0, 0, 0 }), "sign_arena")
 
     -- faixas de perigo no chao em volta dos portais
     local portalPts = { { -9, 9 }, { 9, 9 }, { 0, 10 }, { -10, -1 }, { 10, -1 } }

@@ -4,6 +4,7 @@
 local V = require("vec")
 local A = require("api")
 local Seg = require("segdisplay")
+local L10 = require("i18n")
 
 local Gm = {}
 local G
@@ -47,11 +48,11 @@ end
 ---------------------------------------------------------------------------
 -- Mensagens grandes (texturas pre-renderizadas) + texto no painel de UI
 ---------------------------------------------------------------------------
+-- chave da mensagem -> textura (msg_<nome>_<idioma>.png)
 local MSG_TEX = {
-    wave = "images/msg_wave.png", clear = "images/msg_clear.png", dead = "images/msg_dead.png",
-    crab = "images/msg_crab.png", record = "images/msg_record.png", welcome = "images/msg_welcome.png",
-    sandbox = "images/msg_sandbox.png", hub = "images/msg_hub.png", calib = "images/msg_calib.png",
-    gameover = "images/msg_gameover.png",
+    wave = "msg_wave", clear = "msg_clear", dead = "msg_dead", crab = "msg_crab", record = "msg_record",
+    welcome = "msg_welcome", sandbox = "msg_sandbox", hub = "msg_hub", calib = "msg_calib",
+    gameover = "msg_gameover", padFound = "msg_calib",
 }
 
 local function makeMessageBoard()
@@ -61,14 +62,15 @@ local function makeMessageBoard()
     A.setVisible(msg.root, false)
 end
 
-function Gm.message(text, dur, key, number)
+-- key: chave de traducao (i18n); number: numero opcional (onda)
+function Gm.message(key, dur, number)
+    local text = L10.t(key, number)
     A.log(text)
+    ui.lastStatus = { key = key, number = number }
     if ui.status then pcall(function() EMRAPI.UI:SetText(ui.status, text) end) end
-    if not key then
-        if text:find("CRAB") then key = "crab" end
-    end
-    if not key or not MSG_TEX[key] then return end
-    A.texture(msg.quad, MSG_TEX[key])
+    local tex = MSG_TEX[key]
+    if not tex then return end
+    A.texture(msg.quad, L10.tex(tex))
     -- 2.2 m a frente do jogador, na altura dos olhos, virado pra ele
     local f = G.rig.flatForward()
     local p = V.add(G.rig.head, V.scale(f, 2.2))
@@ -100,16 +102,17 @@ end
 local function makeScoreboard()
     local z = G.level.size - 0.06
     local B = V.identity()   -- leitor olha para +Z
-    local function label(tex, x, y, w)
-        A.prim("quad", { parent = G.rig.world, pos = { x, y, z }, scale = { w, w * 0.25, 1 }, color = { 1, 1, 1 }, tex = tex, mat = { noShadow = true } })
+    local function label(key, x, y, w)
+        local q = A.prim("quad", { parent = G.rig.world, pos = { x, y, z }, scale = { w, w * 0.25, 1 }, color = { 1, 1, 1 }, mat = { noShadow = true } })
+        L10.bindTex(q, key)
     end
     A.prim("cube", { parent = G.rig.world, pos = { 0, 3.05, z + 0.02 }, scale = { 7.6, 2.5, 0.06 }, color = { 0.05, 0.05, 0.06 }, mat = { metal = 0.6, smooth = 0.7 } })
     A.prim("cube", { parent = G.rig.world, pos = { 0, 4.33, z - 0.01 }, scale = { 7.7, 0.05, 0.05 }, color = { 1, 0.45, 0.08 }, mat = { emit = { 1.5, 0.5, 0.05 }, noShadow = true } })
     A.prim("cube", { parent = G.rig.world, pos = { 0, 1.77, z - 0.01 }, scale = { 7.7, 0.05, 0.05 }, color = { 1, 0.45, 0.08 }, mat = { emit = { 1.5, 0.5, 0.05 }, noShadow = true } })
-    label("images/lbl_wave.png", -2.6, 3.95, 1.6)
-    label("images/lbl_score.png", 1.2, 3.95, 1.6)
-    label("images/lbl_best.png", 1.2, 2.75, 1.6)
-    label("images/lbl_enemies.png", -2.6, 2.75, 1.6)
+    label("lbl_wave", -2.6, 3.95, 1.6)
+    label("lbl_score", 1.2, 3.95, 1.6)
+    label("lbl_best", 1.2, 2.75, 1.6)
+    label("lbl_enemies", -2.6, 2.75, 1.6)
     board.wave = Seg.new({ parent = G.rig.world, center = { -2.6, 3.4, z - 0.02 }, basis = B, n = 2, size = 0.42 })
     board.enemies = Seg.new({ parent = G.rig.world, center = { -2.6, 2.2, z - 0.02 }, basis = B, n = 2, size = 0.42, on = { 0.2, 0.8, 1 } })
     board.score = Seg.new({ parent = G.rig.world, center = { 1.2, 3.4, z - 0.02 }, basis = B, n = 6, size = 0.42, on = { 0.3, 1, 0.5 } })
@@ -127,14 +130,15 @@ end
 -- Console com botoes 3D
 ---------------------------------------------------------------------------
 local BUTTONS = {
-    { id = "waves", tex = "images/btn_waves.png", color = { 1, 0.45, 0.08 } },
-    { id = "sandbox", tex = "images/btn_sandbox.png", color = { 0.2, 0.8, 1 } },
-    { id = "hub", tex = "images/btn_hub.png", color = { 0.85, 0.85, 0.9 } },
-    { id = "calib", tex = "images/btn_calib.png", color = { 0.9, 0.2, 0.3 } },
-    { id = "grunt", tex = "images/btn_grunt.png", color = { 1, 0.45, 0.08 } },
-    { id = "gunner", tex = "images/btn_gunner.png", color = { 0.2, 0.8, 1 } },
-    { id = "crab", tex = "images/btn_crab.png", color = { 0.6, 1, 0.2 } },
-    { id = "clear", tex = "images/btn_clear.png", color = { 0.95, 0.85, 0.2 } },
+    { id = "waves", tex = "btn_waves", color = { 1, 0.45, 0.08 } },
+    { id = "sandbox", tex = "btn_sandbox", color = { 0.2, 0.8, 1 } },
+    { id = "hub", tex = "btn_hub", color = { 0.85, 0.85, 0.9 } },
+    { id = "calib", tex = "btn_calib", color = { 0.9, 0.2, 0.3 } },
+    { id = "grunt", tex = "btn_grunt", color = { 1, 0.45, 0.08 } },
+    { id = "gunner", tex = "btn_gunner", color = { 0.2, 0.8, 1 } },
+    { id = "crab", tex = "btn_crab", color = { 0.6, 1, 0.2 } },
+    { id = "clear", tex = "btn_clear", color = { 0.95, 0.85, 0.2 } },
+    { id = "lang", tex = "btn_lang", color = { 0.7, 0.5, 1 } },
 }
 
 local function makeConsole()
@@ -150,22 +154,24 @@ local function makeConsole()
     console.center = center
     -- pe e tampo
     A.prim("cube", { parent = G.rig.world, pos = { center[1], 0.45, center[3] + 0.08 }, scale = { 0.18, 0.9, 0.18 }, color = { 0.13, 0.13, 0.15 }, mat = { metal = 0.8, smooth = 0.6 } })
-    local top = A.prim("cube", { parent = G.rig.world, pos = center, scale = { 0.78, 0.04, 0.42 }, color = { 0.16, 0.16, 0.19 }, mat = { metal = 0.7, smooth = 0.7 }, tex = "images/console.png" })
+    local top = A.prim("cube", { parent = G.rig.world, pos = center, scale = { 0.78, 0.04, 0.58 }, color = { 0.16, 0.16, 0.19 }, mat = { metal = 0.7, smooth = 0.7 } })
+    L10.bindTex(top, "console")
     A.rotBasis(top, Bc)
-    local edge = A.prim("cube", { parent = G.rig.world, pos = V.poseApply(center, Bc, { 0, 0.005, -0.215 }), scale = { 0.8, 0.03, 0.02 }, color = { 1, 0.45, 0.08 }, mat = { emit = { 1.4, 0.45, 0.04 } } })
+    local edge = A.prim("cube", { parent = G.rig.world, pos = V.poseApply(center, Bc, { 0, 0.005, -0.295 }), scale = { 0.8, 0.03, 0.02 }, color = { 1, 0.45, 0.08 }, mat = { emit = { 1.4, 0.45, 0.04 } } })
     A.rotBasis(edge, Bc)
-    G.rig.obstacles[#G.rig.obstacles + 1] = { box = { center[1] - 0.3, center[1] + 0.3, center[3] - 0.25, center[3] + 0.25 } }
+    G.rig.obstacles[#G.rig.obstacles + 1] = { box = { center[1] - 0.32, center[1] + 0.32, center[3] - 0.3, center[3] + 0.3 } }
 
     for i, b in ipairs(BUTTONS) do
         local col = (i - 1) % 4
         local row = math.floor((i - 1) / 4)
-        local lp = { -0.27 + col * 0.18, 0.02, 0.09 - row * 0.17 }
+        local lp = { -0.27 + col * 0.18, 0.02, 0.17 - row * 0.16 }
         local cap = A.prim("cylinder", { parent = G.rig.world, pos = V.poseApply(center, Bc, { lp[1], 0.035, lp[3] }), scale = { 0.1, 0.018, 0.1 }, color = b.color, mat = { metal = 0.3, smooth = 0.8, emit = { b.color[1] * 0.5, b.color[2] * 0.5, b.color[3] * 0.5 } } })
         A.rotBasis(cap, Bc)
         local ring = A.prim("cylinder", { parent = G.rig.world, pos = V.poseApply(center, Bc, { lp[1], 0.022, lp[3] }), scale = { 0.125, 0.01, 0.125 }, color = { 0.08, 0.08, 0.09 }, mat = { metal = 0.8, smooth = 0.6 } })
         A.rotBasis(ring, Bc)
         -- etiqueta deitada no tampo, abaixo do botao
-        local lbl = A.prim("quad", { parent = G.rig.world, pos = V.poseApply(center, Bc, { lp[1], 0.0215, lp[3] - 0.075 }), scale = { 0.16, 0.04, 1 }, color = { 1, 1, 1 }, tex = b.tex, mat = { noShadow = true } })
+        local lbl = A.prim("quad", { parent = G.rig.world, pos = V.poseApply(center, Bc, { lp[1], 0.0215, lp[3] - 0.075 }), scale = { 0.16, 0.04, 1 }, color = { 1, 1, 1 }, mat = { noShadow = true } })
+        L10.bindTex(lbl, b.tex)
         -- quad olha para -Z; queremos olhar para +u do tampo (para cima)
         A.rotBasis(lbl, { r = Bc.r, u = Bc.f, f = V.scale(Bc.u, -1) })
         console.buttons[#console.buttons + 1] = {
@@ -180,7 +186,10 @@ local function pressButton(id)
     elseif id == "sandbox" then Gm.startSandbox()
     elseif id == "hub" then Gm.toHub()
     elseif id == "calib" then
-        if G.controls.startCalibration() then Gm.message("CALIBRANDO JOY-CON", 3, "calib") end
+        if G.controls.startCalibration() then Gm.message("calib", 3) end
+    elseif id == "lang" then
+        L10.cycle()
+        Gm.message("langSet", 2)
     elseif id == "clear" then
         G.bots.clear(false)
     elseif id == "grunt" or id == "gunner" or id == "crab" then
@@ -251,7 +260,7 @@ function Gm.toHub()
     G.infiniteAmmo = false
     spawnDummies()
     playMusic("sounds/music_lab.wav")
-    Gm.message("LABORATORIO", 2.5, "hub")
+    Gm.message("hub", 2.5)
     refreshBoard()
 end
 
@@ -265,7 +274,7 @@ function Gm.startSandbox()
     G.infiniteAmmo = true
     spawnDummies()
     playMusic("sounds/music_lab.wav")
-    Gm.message("SANDBOX: aperte GRUNT/ATIRADOR/CRAB no console", 3, "sandbox")
+    Gm.message("sandbox", 3)
     refreshBoard()
 end
 
@@ -291,7 +300,7 @@ local function beginWave()
     waveState.spawned = 0
     waveState.spawnT = 1
     waveState.maxAlive = math.min(9, 2 + n)
-    Gm.message("ONDA " .. n, 2.5, "wave", n)
+    Gm.message("wave", 2.5, n)
     A.sound("sounds/wave_start.wav", 1)
     refreshBoard()
 end
@@ -330,7 +339,7 @@ local function updateWaves(dt)
             local bonus = Gm.wave * 200
             Gm.addScore(bonus, "bonus da onda")
             G.player.heal(false)
-            Gm.message("ONDA COMPLETA!", 3, "clear")
+            Gm.message("clear", 3)
             A.sound("sounds/wave_clear.wav", 1)
         end
     elseif ws.phase == "over" then
@@ -347,7 +356,7 @@ function Gm.addScore(n, why)
     if G.mode == "waves" and Gm.score > Gm.best then
         if not Gm.recordShown and Gm.best > 0 then
             Gm.recordShown = true
-            Gm.message("NOVO RECORDE!", 2, "record")
+            Gm.message("record", 2)
             A.sound("sounds/record.wav", 1)
         end
         Gm.best = Gm.score
@@ -379,10 +388,10 @@ function Gm.onPlayerDeath()
     if G.mode == "waves" then
         waveState.phase = "over"
         waveState.t = 4.5
-        Gm.message("VOCE MORREU - FIM DE JOGO", 4.5, "gameover", Gm.wave)
+        Gm.message("gameover", 4.5, Gm.wave)
         for _, b in ipairs(G.bots.list) do b.passive = true end
     else
-        Gm.message("VOCE MORREU", 3, "dead")
+        Gm.message("dead", 3)
         EMRAPI.Timer:Delay(2.5, function() G.player.heal(true) end)
     end
 end
@@ -390,6 +399,9 @@ end
 ---------------------------------------------------------------------------
 -- Painel de UI (configuracoes) — usa o EMRAPI.UI da plataforma
 ---------------------------------------------------------------------------
+local padText = ""
+local updatePadText
+
 local function uiTry(fn)
     local ok, err = pcall(fn)
     if not ok then A.warnOnce("ui", "UI: " .. tostring(err)) end
@@ -399,69 +411,87 @@ end
 local function makeUI()
     uiTry(function()
         local U = EMRAPI.UI
-        local panel = U:CreatePanel(0.9, 0.95)
+        local t = L10.t
+        local panel = U:CreatePanel(0.9, 1.05)
         ui.panel = panel
         U:SetColor(panel, 0.06, 0.06, 0.08, 0.94)
-        local title = U:CreateText(panel, "BONELAB REMAKE  |  LAB")
-        U:SetPosition(title, 0, 205, 0); U:SetSize(title, 420, 40)
-        ui.status = U:CreateText(panel, "Pegue uma arma na mesa. Aperte os botoes do console com o dedo.")
-        U:SetPosition(ui.status, 0, 155, 0); U:SetSize(ui.status, 420, 70)
-        ui.pad = U:CreateText(panel, "Joy-Con: procurando...")
-        U:SetPosition(ui.pad, 0, 105, 0); U:SetSize(ui.pad, 420, 40)
+        local title = U:CreateText(panel, t("title"))
+        U:SetPosition(title, 0, 230, 0); U:SetSize(title, 420, 40)
+        local st = ui.lastStatus and t(ui.lastStatus.key, ui.lastStatus.number) or t("intro")
+        ui.status = U:CreateText(panel, st)
+        U:SetPosition(ui.status, 0, 180, 0); U:SetSize(ui.status, 420, 70)
+        ui.pad = U:CreateText(panel, t("padSearch"))
+        U:SetPosition(ui.pad, 0, 130, 0); U:SetSize(ui.pad, 420, 40)
+        padText = ""
 
         local function btn(text, x, y, cb)
             local b = U:CreateButton(panel, text, cb)
             U:SetPosition(b, x, y, 0); U:SetSize(b, 200, 44)
             return b
         end
-        btn("Modo ONDAS", -105, 55, function() Gm.startWaves() end)
-        btn("SANDBOX", 105, 55, function() Gm.startSandbox() end)
-        btn("Calibrar Joy-Con", -105, 5, function()
-            if G.controls.startCalibration() then Gm.message("CALIBRANDO JOY-CON", 3, "calib") end
+        btn(t("bWaves"), -105, 80, function() Gm.startWaves() end)
+        btn(t("bSandbox"), 105, 80, function() Gm.startSandbox() end)
+        btn(t("bCalib"), -105, 30, function()
+            if G.controls.startCalibration() then Gm.message("calib", 3) end
         end)
-        btn("Recentralizar", 105, 5, function() G.rig.recenter(G.level.playerSpawn) end)
+        btn(t("bRecenter"), 105, 30, function() G.rig.recenter(G.level.playerSpawn) end)
 
         local function toggle(text, key, x, y, apply)
-            local t = U:CreateToggle(panel, text, function(state)
+            local tg = U:CreateToggle(panel, text, function(state)
                 G.settings[key] = state
                 A.setBool(key, state); A.save()
                 if apply then apply(state) end
             end)
-            U:SetPosition(t, x, y, 0); U:SetSize(t, 200, 36)
-            return t
+            U:SetPosition(tg, x, y, 0); U:SetSize(tg, 200, 36)
+            return tg
         end
-        toggle("Mira assistida", "aimAssist", -105, -45, function(s) G.aimAssist = s end)
-        toggle("Andar com gesto", "gestureWalk", 105, -45, function(s) G.controls.gestureWalk = s end)
-        toggle("Ver o quarto (MR)", "passthrough", -105, -85, function(s)
-            pcall(function() EMRAPI.Camera:SetBackground(s and "show" or "hide") end)
+        toggle(t("tAim"), "aimAssist", -105, -20, function(v) G.aimAssist = v end)
+        toggle(t("tWalk"), "gestureWalk", 105, -20, function(v) G.controls.gestureWalk = v end)
+        toggle(t("tMR"), "passthrough", -105, -60, function(v)
+            pcall(function() EMRAPI.Camera:SetBackground(v and "show" or "hide") end)
         end)
-        toggle("Virar suave", "smoothTurn", 105, -85)
+        toggle(t("tSmooth"), "smoothTurn", 105, -60)
+        toggle(t("tSticky"), "stickyGrab", -105, -100, function(v) G.controls.stickyGrab = v end)
 
         local function slider(text, lo, hi, x, y, cb)
             local l = U:CreateText(panel, text)
             U:SetPosition(l, x, y + 22, 0); U:SetSize(l, 200, 28)
-            local s = U:CreateSlider(panel, lo, hi, cb)
-            U:SetPosition(s, x, y, 0); U:SetSize(s, 190, 26)
-            return s
+            local sl = U:CreateSlider(panel, lo, hi, cb)
+            U:SetPosition(sl, x, y, 0); U:SetSize(sl, 190, 26)
+            return sl
         end
-        slider("Altura (m)", 1.2, 2.0, -105, -140, function(v)
+        slider(t("sHeight"), 1.2, 2.0, -105, -160, function(v)
             G.settings.height = v
             G.rig.setHeight(v)
             A.setNum("height", v); A.save()
         end)
-        slider("Velocidade", 1, 4, 105, -140, function(v)
+        slider(t("sSpeed"), 1, 4, 105, -160, function(v)
             G.settings.moveSpeed = v
             A.setNum("moveSpeed", v); A.save()
         end)
-        slider("Musica", 0, 1, -105, -195, function(v)
+        slider(t("sMusic"), 0, 1, -105, -215, function(v)
             Gm.setMusicVolume(v)
             A.setNum("musicVol", v); A.save()
         end)
-        btn("Fechar menu", 105, -195, function() Gm.toggleMenu(false) end)
+        btn(t("bLang"), 105, -110, function()
+            L10.cycle()
+            Gm.message("langSet", 2)
+        end)
+        btn(t("bClose"), 105, -215, function() Gm.toggleMenu(false) end)
     end)
     G.controls.onCalibText = function(txt)
         if ui.status then pcall(function() EMRAPI.UI:SetText(ui.status, txt) end) end
     end
+end
+
+-- troca de idioma: o painel e recriado com os textos novos
+local function rebuildUI()
+    local wasVisible = ui.visible
+    if ui.panel then pcall(function() EMRAPI.UI:Destroy(ui.panel) end) end
+    ui.panel, ui.status, ui.pad = nil, nil, nil
+    makeUI()
+    ui.visible = true
+    if wasVisible == false then Gm.toggleMenu(false) end
 end
 
 function Gm.toggleMenu(state)
@@ -471,17 +501,16 @@ function Gm.toggleMenu(state)
     pcall(function() EMRAPI.UI:SetActive(ui.panel, state) end)
 end
 
-local padText = ""
-local function updatePadText()
+updatePadText = function()
     if not ui.pad then return end
     local C = G.controls
     local t
     if C.calibrating then
-        t = "Joy-Con: calibrando..."
+        t = L10.t("padCal")
     elseif C.padConnected then
-        t = "Joy-Con conectado: " .. C.padNames
+        t = L10.t("padOn", C.padNames)
     else
-        t = "Sem Joy-Con: usando gestos das maos"
+        t = L10.t("padOff")
     end
     if t ~= padText then
         padText = t
@@ -498,6 +527,7 @@ function Gm.init(ctx)
     makeConsole()
     makeUI()
     ui.visible = true
+    L10.onChange(function() rebuildUI() end)
     refreshBoard()
 end
 

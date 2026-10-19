@@ -20,6 +20,19 @@ python3 tools/gen_sounds.py     # sons e músicas (sounds/)
 python3 tools/build_emrd.py     # -> dist/BoneLabRemake.emrd
 ```
 
+## Novidades da 1.1.0 (pedidas pela moderação)
+
+- **Idiomas: English / Русский / Português.** Todos os textos e placas do cenário foram traduzidos.
+  O idioma inicial segue o teclado da plataforma, e dá pra trocar no botão **IDIOMA/LANGUAGE/ЯЗЫК**
+  do console ou no painel.
+- **Pegar ficou bem mais fácil e nada escorrega mais da mão:**
+  - pra soltar, a mão tem que ficar *claramente aberta* por um instante; tremida do tracking não derruba;
+  - se o tracking perde a mão, o item continua segurado;
+  - raio de pega 50% maior, e apertar "pegar" um pouco antes de encostar também pega;
+  - **puxar à distância** (force grab, como no BONELAB): aponte a palma pra arma até 3 m e feche a mão;
+  - opção **"Pegar alternado"**: fecha uma vez pra pegar e o item fica na mão até fechar de novo.
+  - No teste com tracking ruim (tremor + perda da mão), a 1.0 deixou a arma cair 6 vezes e a 1.1, nenhuma.
+
 ## O que tem
 
 - **Mão fake articulada**: as 21 articulações do hand tracking viram uma mão de manequim/robô, com
@@ -53,7 +66,8 @@ python3 tools/build_emrd.py     # -> dist/BoneLabRemake.emrd
 | Ação | Joy-Con | Gestos (sem controle) |
 |---|---|---|
 | Pegar / segurar | **R / L** | fechar médio + anelar + mindinho |
-| Soltar / arremessar | soltar R / L | abrir a mão |
+| Puxar à distância | apontar a palma + **R / L** | apontar a palma + fechar a mão inteira |
+| Soltar / arremessar | soltar R / L | abrir bem a mão (ou fechar de novo, no modo alternado) |
 | Atirar | **ZR / ZL** | dobrar o indicador |
 | Soltar o pente | **A** | atirar sem munição (o pente vazio cai sozinho) |
 | Pente novo | mão livre na bolsa do quadril + pegar | igual |
@@ -65,10 +79,10 @@ Na primeira vez com Joy-Con, aperte o botão **JOY-CON** no console do lab e sig
 o jogo pede cada botão e salva o mapeamento.
 
 **Console do laboratório** (aperte os botões com o dedo): ONDAS, SANDBOX, LAB, JOY-CON, GRUNT,
-ATIRADOR, CRAB, LIMPAR.
+ATIRADOR, CRAB, LIMPAR, IDIOMA.
 
-**Painel de configurações**: mira assistida, andar com gesto, ver o quarto (modo MR com a câmera),
-virar suave, altura, velocidade e volume da música.
+**Painel de configurações**: idioma, mira assistida, andar com gesto, ver o quarto (modo MR com a câmera),
+virar suave, pegar alternado, altura, velocidade e volume da música.
 
 ## Estrutura
 
@@ -88,6 +102,7 @@ scripts/props.lua   caixas e barris com física real
 scripts/combat.lua  raycast unificado, dano e explosões
 scripts/player.lua  vida, dano, relógio de pulso, socos
 scripts/game.lua    modos, ondas, placar, console 3D, mensagens, menu
+scripts/i18n.lua    traduções EN / RU / PT
 tools/              geradores de textura/som, empacotador e simulador de testes
 ```
 
@@ -103,6 +118,8 @@ python3 tools/run_sim.py --scenario joycon   # calibra, anda, vira, pega e atira
 python3 tools/run_sim.py --scenario crab     # crab pula no rosto, você arranca e arremessa
 python3 tools/run_sim.py --scenario idle --seconds 90   # bots matam o jogador -> fim de jogo
 python3 tools/run_sim.py --scenario smoke --nocs        # plataforma sem acesso a CS.*
+python3 tools/run_sim.py --scenario jitter              # segurar arma com tracking ruim: não pode cair
+python3 tools/run_sim.py --scenario smoke --lang ru     # roda em russo (en / ru / pt)
 ```
 
 `tools/render_scene.js` renderiza os snapshots (`--snap`) com three.js para conferir o visual.

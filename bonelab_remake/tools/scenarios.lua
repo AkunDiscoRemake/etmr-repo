@@ -153,7 +153,7 @@ function S.step(t, dt)
     st.held = (st.held or 0) + dt
     if st.held > 3 and not st.wavesStarted then
         st.wavesStarted = true
-        MOCK.buttons["Modo ONDAS"]()
+        MOCK.buttons[require("i18n").t("bWaves")]()
     end
 
     -- mira: alvo = bot mais proximo (cabeca); arma 45 cm a frente
@@ -329,7 +329,7 @@ function K.step(t, dt)
     local Vm = V()
     if t > 1 and not kt.spawned then
         kt.spawned = true
-        MOCK.buttons["SANDBOX"]()
+        MOCK.buttons[require("i18n").t("bSandbox")]()
         local p = Vm.add(g.rig.head, Vm.scale(g.rig.flatForward(), 4))
         kt.crab = g.bots.spawn("crab", { p[1], 0, p[3] }, { force = true })
     end
@@ -368,7 +368,7 @@ function Id.step(t, dt)
     if g and g.items then restHand("right"); restHand("left") end
     if g and g.game and t > 1 and not Id.started then
         Id.started = true
-        MOCK.buttons["Modo ONDAS"]()
+        MOCK.buttons[require("i18n").t("bWaves")]()
     end
 end
 function Id.report()
@@ -391,7 +391,7 @@ function Sh.step(t, dt)
     local I, R = g.items, g.rig
     if t > 0.5 and not sh.spawned then
         sh.spawned = true
-        MOCK.buttons["SANDBOX"]()
+        MOCK.buttons[require("i18n").t("bSandbox")]()
         g.bots.clear(true)
         sh.grunt = g.bots.spawn("grunt", { -1.0, 0, -4.4 }, { yaw = 170, force = true, passive = true })
         sh.gunner = g.bots.spawn("gunner", { 1.5, 0, -3.6 }, { yaw = 200, force = true, passive = true })
@@ -422,3 +422,48 @@ function Sh.step(t, dt)
     end
 end
 function Sh.report() return "held=" .. tostring(G().items.isHeld(G().items.slots[2].item)) end
+
+---------------------------------------------------------------------------
+-- Cenario: jitter — segurando a pistola com tracking ruim (tremor + perda)
+-- Conta quantas vezes a arma caiu da mao sem o jogador abrir a mao.
+---------------------------------------------------------------------------
+local Jt = {}
+SCENARIOS.jitter = Jt
+local jj = {}
+function Jt.setup() setHead({ 0, 0, 0 }, 0, 0); jj = { drops = 0, had = false, lostFrames = 0, noisy = 0 } end
+function Jt.step(t, dt)
+    local g = G()
+    setHead({ 0, 0, 0 }, 0, 0)
+    if not g or not g.items then return end
+    local Vm, I, P = V(), g.items, require("poses")
+    local gun = I.gunIn("right")
+    restHand("left")
+    if not jj.had then
+        local it = I.slots[1].item
+        local palm = Vm.poseApply(it.pos, it.B, P.get("pistol", "right").palm)
+        placeHand("right", palm, Vm.mulMM(it.B, P.get("pistol", "right").basis), t > 1.5 and GRIP or OPEN)
+        if gun then jj.had = true; jj.t0 = t end
+        return
+    end
+    if jj.had and not gun and not jj.dropped then jj.drops = jj.drops + 1; jj.dropped = true end
+    if gun then jj.dropped = false end
+    local R = g.rig
+    local gp = Vm.add(Vm.add(R.head, Vm.scale(R.flatForward(), 0.4)), { 0.1, -0.15, 0 })
+    -- 15% dos frames a leitura dos dedos "abre" (ruido), e a cada 4 s a mao some por 1.5 s
+    local curl = GRIP
+    if math.random() < 0.15 then curl = { 0.3, 0, 0.15, 0.2, 0.1 }; jj.noisy = jj.noisy + 1 end
+    local lt = t - jj.t0
+    local lost = (lt % 4) > 2.5
+    if lost then jj.lostFrames = jj.lostFrames + 1 end
+    handForObject("right", gp, Vm.basis(R.flatForward(), { 0, 1, 0 }), "grip", g.weapons.defs.pistol, curl)
+    if lost then MOCK.hands.right.tracked = false end
+    -- no fim, abre a mao de verdade por 0.6 s: tem que soltar
+    if lt > 14 then
+        handForObject("right", gp, Vm.basis(R.flatForward(), { 0, 1, 0 }), "grip", g.weapons.defs.pistol, OPEN)
+    end
+end
+function Jt.report()
+    local g = G()
+    return string.format("pegou=%s quedas_durante_ruido=%d framesRuido=%d framesSemTracking=%d soltouNoFim=%s",
+        tostring(jj.had), jj.drops - (g.items.gunIn("right") and 0 or 1), jj.noisy, jj.lostFrames, tostring(g.items.gunIn("right") == nil))
+end

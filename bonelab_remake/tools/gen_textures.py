@@ -150,7 +150,7 @@ def wall(name, labels):
                     d.rectangle([x0 + 30, y0 + 40 + k * 12, x0 + pw - 30, y0 + 46 + k * 12], fill=(60, 62, 68))
             if r == 2 and c % 4 == 0:
                 d.text((x0 + 18, y0 + 18), labels[(c // 4) % len(labels)], font=f, fill=(40, 42, 48))
-                d.text((x0 + 18, y0 + 52), "SETOR %02d" % (c + 1), font=fm, fill=(110, 112, 118))
+                d.text((x0 + 18, y0 + 52), "SEC-%02d" % (c + 1), font=fm, fill=(110, 112, 118))
             if r == 0 and c % 3 == 2:
                 d.rectangle([x0 + pw * 0.3, y0 + ph * 0.25, x0 + pw * 0.7, y0 + ph * 0.32], fill=ORANGE)
     grime = noise(W, H, 96, 4, 12)
@@ -204,7 +204,7 @@ def cover():
     save(img, "cover.png")
 
 
-def table():
+def table(tx, sfx):
     W, H = 1024, 384
     base = 0.22 + 0.05 * noise(W, H, 32, 4, 51)
     arr = tint(base, (120, 124, 132))
@@ -216,8 +216,8 @@ def table():
         d.line([0, y, W, y], fill=(40, 42, 48), width=1)
     d.rectangle([6, 6, W - 6, H - 6], outline=ORANGE, width=6)
     f = font(FONT_BOLD, 28)
-    d.text((24, H - 50), "ARSENAL  //  PEGUE UMA ARMA", font=f, fill=(255, 140, 50))
-    save(img, "table.png")
+    d.text((24, H - 50), "ARSENAL  //  " + tx["table"], font=f, fill=(255, 140, 50))
+    save(img, "table" + sfx)
 
 
 def hazard_ring():
@@ -324,7 +324,7 @@ def crab_shell():
     save(img, "crab_shell.png")
 
 
-def crate():
+def crate(tx, sfx):
     W = 512
     planks = np.zeros((W, W), np.float32)
     for i in range(6):
@@ -342,23 +342,23 @@ def crate():
     d.rectangle([0, 0, 40, W], fill=(60, 62, 68))
     d.rectangle([W - 40, 0, W, W], fill=(60, 62, 68))
     d.line([40, 40, W - 40, W - 40], fill=(60, 62, 68), width=34)
-    text_center(d, (60, 180, W - 60, 330), "FRÁGIL", font(FONT_BOLD, 72), ORANGE, 4, (30, 20, 10))
-    save(img, "crate.png")
+    text_center(d, (60, 180, W - 60, 330), tx["fragile"], fit_font(d, tx["fragile"], FONT_BOLD, W - 140, 140, 72), ORANGE, 4, (30, 20, 10))
+    save(img, "crate" + sfx)
 
 
-def crate_small():
+def crate_small(tx, sfx):
     W = 512
     base = 0.7 + 0.08 * noise(W, W, 32, 4, 131)
     arr = tint(base, (200, 160, 110))
     img = to_img(arr)
     d = ImageDraw.Draw(img)
     d.rectangle([W / 2 - 40, 0, W / 2 + 40, W], fill=(180, 170, 140))
-    d.text((40, 380), "PEÇAS", font=font(FONT_BOLD, 60), fill=(90, 60, 30))
-    d.text((40, 450), "↑ ESTE LADO PRA CIMA", font=font(FONT_MED, 26), fill=(90, 60, 30))
-    save(img, "crate_small.png")
+    d.text((40, 380), tx["parts"], font=font(FONT_BOLD, 60), fill=(90, 60, 30))
+    d.text((40, 450), "↑ " + tx["up"], font=fit_font(d, "↑ " + tx["up"], FONT_MED, W - 80, 40, 26), fill=(90, 60, 30))
+    save(img, "crate_small" + sfx)
 
 
-def barrel():
+def barrel(tx, sfx):
     W, H = 1024, 512
     base = 0.62 + 0.08 * noise(W, H, 32, 4, 141)
     arr = tint(base, (210, 40, 30))
@@ -372,18 +372,18 @@ def barrel():
         d.polygon([(cx, 140), (cx + 110, 330), (cx - 110, 330)], fill=(250, 200, 30), outline=(20, 20, 20))
         d.polygon([(cx, 175), (cx + 85, 315), (cx - 85, 315)], outline=(20, 20, 20), width=6)
         text_center(d, (cx - 40, 210, cx + 40, 310), "!", font(FONT_BOLD, 90), (20, 20, 20))
-        text_center(d, (cx - 200, 350, cx + 200, 420), "INFLAMÁVEL", font(FONT_BOLD, 44), (250, 240, 230))
-    save(img, "barrel.png")
+        text_center(d, (cx - 200, 350, cx + 200, 420), tx["flammable"], fit_font(d, tx["flammable"], FONT_BOLD, 400, 70, 44), (250, 240, 230))
+    save(img, "barrel" + sfx)
 
 
-def console_tex():
+def console_tex(tx, sfx):
     W, H = 1024, 512
     base = 0.18 + 0.04 * noise(W, H, 32, 3, 151)
     img = to_img(tint(base, (140, 145, 160)))
     d = ImageDraw.Draw(img)
     d.rectangle([10, 10, W - 10, H - 10], outline=(90, 92, 100), width=8)
-    d.text((40, 30), "CONTROLE DO LAB", font=font(FONT_BOLD, 40), fill=ORANGE)
-    save(img, "console.png")
+    d.text((40, 30), tx["console"], font=font(FONT_BOLD, 40), fill=ORANGE)
+    save(img, "console" + sfx)
 
 
 # ---------------------------------------------------------------------------
@@ -454,27 +454,100 @@ def poster_logo():
     save(img, "poster_logo.png")
 
 
-def poster_lab():
+def poster_lab(tx, sfx):
     W, H = 1000, 500
     img = Image.new("RGB", (W, H), (235, 236, 240))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, W, 110], fill=ORANGE)
-    text_center(d, (0, 0, W, 110), "AVISO DE SEGURANÇA", font(FONT_BOLD, 64), (20, 20, 24))
-    lines = ["1. NÃO ALIMENTE OS CRABS", "2. CRAB NO ROSTO? ARRANQUE NA MÃO", "3. BARRIL VERMELHO = BOOM",
-             "4. RECARREGUE PELO QUADRIL"]
+    text_center(d, (0, 0, W, 110), tx["safety"], fit_font(d, tx["safety"], FONT_BOLD, W - 60, 90, 64), (20, 20, 24))
+    lines = tx["rules"]
     for i, l in enumerate(lines):
         d.text((50, 140 + i * 80), l, font=fit_font(d, l, FONT_BOLD, W - 100, 60, 44), fill=(30, 30, 36))
-    save(img, "poster_lab.png")
+    save(img, "poster_lab" + sfx)
+
+
+LANG = {
+    "pt": {
+        "table": "PEGUE UMA ARMA", "fragile": "FRÁGIL", "parts": "PEÇAS", "up": "ESTE LADO PRA CIMA",
+        "flammable": "INFLAMÁVEL", "console": "CONTROLE DO LAB", "safety": "AVISO DE SEGURANÇA",
+        "rules": ["1. NÃO ALIMENTE OS CRABS", "2. CRAB NO ROSTO? ARRANQUE NA MÃO", "3. BARRIL VERMELHO = BOOM",
+                  "4. RECARREGUE PELO QUADRIL"],
+        "sign": "ARENA DE TESTES", "wave": "ONDA", "score": "PONTOS", "best": "RECORDE", "enemies": "INIMIGOS",
+        "msg_wave": ("ONDA", "prepare-se!"),
+        "msg_clear": ("ONDA COMPLETA!", "+ vida  •  bônus de pontos"),
+        "msg_dead": ("VOCÊ MORREU", "voltando em instantes..."),
+        "msg_gameover": ("FIM DE JOGO", "onda alcançada"),
+        "msg_crab": ("CRAB NO ROSTO!", "feche a mão nele e arremesse — ou soque!"),
+        "msg_record": ("NOVO RECORDE!", None),
+        "msg_welcome": ("BEM-VINDO AO LAB", "pegue uma arma na mesa  •  aperte os botões do console"),
+        "msg_sandbox": ("SANDBOX", "munição infinita  •  crie inimigos no console"),
+        "msg_hub": ("LABORATÓRIO", "treine nos bonecos ou comece as ONDAS"),
+        "msg_calib": ("CALIBRANDO JOY-CON", "siga as instruções do painel"),
+        "btn": {"waves": "ONDAS", "sandbox": "SANDBOX", "hub": "LAB", "calib": "JOY-CON", "grunt": "GRUNT",
+                "gunner": "ATIRADOR", "crab": "CRAB", "clear": "LIMPAR", "lang": "IDIOMA: PT"},
+    },
+    "en": {
+        "table": "GRAB A WEAPON", "fragile": "FRAGILE", "parts": "PARTS", "up": "THIS SIDE UP",
+        "flammable": "FLAMMABLE", "console": "LAB CONTROL", "safety": "SAFETY NOTICE",
+        "rules": ["1. DO NOT FEED THE CRABS", "2. CRAB ON FACE? RIP IT OFF", "3. RED BARREL = BOOM",
+                  "4. RELOAD FROM YOUR HIP"],
+        "sign": "TEST ARENA", "wave": "WAVE", "score": "SCORE", "best": "BEST", "enemies": "ENEMIES",
+        "msg_wave": ("WAVE", "get ready!"),
+        "msg_clear": ("WAVE CLEARED!", "+ health  •  score bonus"),
+        "msg_dead": ("YOU DIED", "respawning shortly..."),
+        "msg_gameover": ("GAME OVER", "wave reached"),
+        "msg_crab": ("CRAB ON YOUR FACE!", "grab it and throw it — or punch it!"),
+        "msg_record": ("NEW RECORD!", None),
+        "msg_welcome": ("WELCOME TO THE LAB", "grab a weapon from the table  •  press the console buttons"),
+        "msg_sandbox": ("SANDBOX", "infinite ammo  •  spawn enemies at the console"),
+        "msg_hub": ("LABORATORY", "train on the dummies or start the WAVES"),
+        "msg_calib": ("CALIBRATING JOY-CON", "follow the instructions on the panel"),
+        "btn": {"waves": "WAVES", "sandbox": "SANDBOX", "hub": "LAB", "calib": "JOY-CON", "grunt": "GRUNT",
+                "gunner": "GUNNER", "crab": "CRAB", "clear": "CLEAR", "lang": "LANGUAGE: EN"},
+    },
+    "ru": {
+        "table": "ВОЗЬМИ ОРУЖИЕ", "fragile": "ХРУПКОЕ", "parts": "ДЕТАЛИ", "up": "ВЕРХ",
+        "flammable": "ОГНЕОПАСНО", "console": "ПУЛЬТ ЛАБОРАТОРИИ", "safety": "ТЕХНИКА БЕЗОПАСНОСТИ",
+        "rules": ["1. НЕ КОРМИТЬ КРАБОВ", "2. КРАБ НА ЛИЦЕ? СОРВИ РУКОЙ", "3. КРАСНАЯ БОЧКА = БУМ",
+                  "4. ПЕРЕЗАРЯДКА С ПОЯСА"],
+        "sign": "ИСПЫТАТЕЛЬНАЯ АРЕНА", "wave": "ВОЛНА", "score": "ОЧКИ", "best": "РЕКОРД", "enemies": "ВРАГИ",
+        "msg_wave": ("ВОЛНА", "приготовься!"),
+        "msg_clear": ("ВОЛНА ПРОЙДЕНА!", "+ здоровье  •  бонус очков"),
+        "msg_dead": ("ТЫ ПОГИБ", "возрождение..."),
+        "msg_gameover": ("ИГРА ОКОНЧЕНА", "достигнутая волна"),
+        "msg_crab": ("КРАБ НА ЛИЦЕ!", "схвати и брось — или ударь!"),
+        "msg_record": ("НОВЫЙ РЕКОРД!", None),
+        "msg_welcome": ("ДОБРО ПОЖАЛОВАТЬ", "возьми оружие со стола  •  нажимай кнопки пульта"),
+        "msg_sandbox": ("ПЕСОЧНИЦА", "бесконечные патроны  •  враги — на пульте"),
+        "msg_hub": ("ЛАБОРАТОРИЯ", "тренируйся на манекенах или начни ВОЛНЫ"),
+        "msg_calib": ("НАСТРОЙКА JOY-CON", "следуй инструкциям на панели"),
+        "btn": {"waves": "ВОЛНЫ", "sandbox": "ПЕСОЧНИЦА", "hub": "ЛАБ", "calib": "JOY-CON", "grunt": "ГРАНТ",
+                "gunner": "СТРЕЛОК", "crab": "КРАБ", "clear": "ОЧИСТИТЬ", "lang": "ЯЗЫК: RU"},
+    },
+}
+
+MSG_COLORS = {
+    "msg_wave": ORANGE, "msg_clear": (80, 255, 130), "msg_dead": (255, 60, 50), "msg_gameover": (255, 60, 50),
+    "msg_crab": (150, 255, 60), "msg_record": (255, 215, 60), "msg_welcome": ORANGE, "msg_sandbox": (60, 200, 255),
+    "msg_hub": ORANGE, "msg_calib": (255, 60, 90),
+}
+BTN_COLORS = {
+    "waves": ORANGE, "sandbox": (60, 200, 255), "hub": (220, 220, 230), "calib": (255, 60, 90),
+    "grunt": ORANGE, "gunner": (60, 200, 255), "crab": (150, 255, 60), "clear": (255, 215, 60),
+    "lang": (180, 130, 255),
+}
 
 
 def main():
+    # remove texturas antigas (sem sufixo de idioma / restos)
+    for f in os.listdir(OUT):
+        os.remove(os.path.join(OUT, f))
     floor()
-    wall("wall.png", ["LAB 01", "ARENA", "TESTES"])
-    wall("wall_side.png", ["MYTHOS", "LAB 02", "SAÍDA"])
+    wall("wall.png", ["LAB 01", "ARENA", "TEST-3"])
+    wall("wall_side.png", ["MYTHOS", "LAB 02", "EXIT"])
     ceiling()
     concrete()
     cover()
-    table()
     hazard_ring()
     bullethole()
     gun_slide()
@@ -483,34 +556,25 @@ def main():
     bat()
     bot_torso()
     crab_shell()
-    crate()
-    crate_small()
-    barrel()
-    console_tex()
     poster_logo()
-    poster_lab()
-    label("sign_arena.png", "ARENA DE TESTES", 1200, 300)
-    label("lbl_wave.png", "ONDA")
-    label("lbl_score.png", "PONTOS", color=(80, 255, 130))
-    label("lbl_best.png", "RECORDE", color=(255, 215, 60))
-    label("lbl_enemies.png", "INIMIGOS", color=(60, 200, 255))
-    panel("msg_wave.png", "ONDA", "prepare-se!")
-    panel("msg_clear.png", "ONDA COMPLETA!", "+ vida  •  bônus de pontos", color=(80, 255, 130))
-    panel("msg_dead.png", "VOCÊ MORREU", "voltando em instantes...", color=(255, 60, 50))
-    panel("msg_gameover.png", "FIM DE JOGO", "onda alcançada", color=(255, 60, 50))
-    panel("msg_crab.png", "CRAB NO ROSTO!", "feche a mão nele e arremesse — ou soque!", color=(150, 255, 60))
-    panel("msg_record.png", "NOVO RECORDE!", None, color=(255, 215, 60))
-    panel("msg_welcome.png", "BEM-VINDO AO LAB", "pegue uma arma na mesa  •  aperte os botões do console")
-    panel("msg_sandbox.png", "SANDBOX", "munição infinita  •  crie inimigos no console", color=(60, 200, 255))
-    panel("msg_hub.png", "LABORATÓRIO", "treine nos bonecos ou comece as ONDAS")
-    panel("msg_calib.png", "CALIBRANDO JOY-CON", "siga as instruções do painel", color=(255, 60, 90))
-    for name, text, col in [
-        ("btn_waves.png", "ONDAS", ORANGE), ("btn_sandbox.png", "SANDBOX", (60, 200, 255)),
-        ("btn_hub.png", "LAB", (220, 220, 230)), ("btn_calib.png", "JOY-CON", (255, 60, 90)),
-        ("btn_grunt.png", "GRUNT", ORANGE), ("btn_gunner.png", "ATIRADOR", (60, 200, 255)),
-        ("btn_crab.png", "CRAB", (150, 255, 60)), ("btn_clear.png", "LIMPAR", (255, 215, 60)),
-    ]:
-        button_label(name, text, col)
+    for lang, tx in LANG.items():
+        sfx = "_" + lang + ".png"
+        table(tx, sfx)
+        crate(tx, sfx)
+        crate_small(tx, sfx)
+        barrel(tx, sfx)
+        console_tex(tx, sfx)
+        poster_lab(tx, sfx)
+        label("sign_arena" + sfx, tx["sign"], 1200, 300)
+        label("lbl_wave" + sfx, tx["wave"])
+        label("lbl_score" + sfx, tx["score"], color=(80, 255, 130))
+        label("lbl_best" + sfx, tx["best"], color=(255, 215, 60))
+        label("lbl_enemies" + sfx, tx["enemies"], color=(60, 200, 255))
+        for key, col in MSG_COLORS.items():
+            title, sub = tx[key]
+            panel(key + sfx, title, sub, color=col)
+        for key, col in BTN_COLORS.items():
+            button_label("btn_" + key + sfx, tx["btn"][key], col)
     print("texturas em", OUT, len(os.listdir(OUT)))
 
 
