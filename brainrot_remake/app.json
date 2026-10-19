@@ -1,0 +1,13 @@
+{
+  "id": "com.akundisco.restealbrainrot",
+  "name": "RE:Steal A Brainrot VR",
+  "version": "1.0.0",
+  "author": "AkunDiscoRemake",
+  "description": "Steal a Brainrot in VR! Buy ITALIAN brainrots on the red carpet (you start with $200), collect money in your base, then STEAL from other bases: hold for 5 seconds and run home! Defend with the bat, lock your base with lasers. Halloween nights, Candy and rare Lava events with boosts, 56 brainrots (Tralalero Tralala, Bombardiro Crocodilo, Los Tralaleritos...), mutations, rebirth. ONLINE multiplayer or solo with rival bots. Bacon Hair and Acorn Girl avatars. Walk with Joy-Cons (or hand gestures). English / Русский / Português.\nУкради брейнрот в VR! Покупай итальянских брейнротов, собирай деньги, воруй с чужих баз и беги домой. Онлайн или с ботами, Joy-Con, ивенты Хэллоуин, Конфеты и Лава.",
+  "entry": "scripts/main.lua",
+  "display": "scene",
+  "minApiVersion": 2,
+  "type": "lua",
+  "permissions": ["scene", "input", "audio", "storage", "ui", "multiplayer"],
+  "photonRegion": "eu"
+}
