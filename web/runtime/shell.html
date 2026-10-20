@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d14">
+<title>{{TITLE}}</title>
+<link rel="icon" href="data:image/png;base64,{{ICON}}">
+<style>
+  :root { --bg: #0b0d14; --card: #151a28; --line: #2a3350; --txt: #eef1ff; --mut: #9aa4c4; --acc: #ffcc33; --acc2: #ff4f4f; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font-family: system-ui, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  #c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+  #start { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto;
+           background: radial-gradient(ellipse at top, #1d2440 0%, #0b0d14 70%); z-index: 10; }
+  .card { width: min(560px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .head { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+  .head img { width: 84px; height: 84px; border-radius: 16px; flex: none; image-rendering: auto; }
+  h1 { font-size: 24px; margin: 0 0 4px; line-height: 1.15; }
+  .sub { color: var(--mut); font-size: 13px; margin: 0; }
+  .btns { display: grid; gap: 10px; margin: 16px 0 12px; }
+  button.big { font: inherit; font-weight: 800; font-size: 17px; padding: 14px 16px; border-radius: 12px; border: 0; cursor: pointer; color: #1a1300; background: var(--acc); display: flex; align-items: center; gap: 10px; justify-content: center; }
+  button.big.alt { background: #2b3557; color: var(--txt); }
+  button.big:disabled { opacity: .45; cursor: not-allowed; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: var(--mut); margin: 6px 0 10px; }
+  .opts label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  details { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; font-size: 13.5px; color: var(--mut); }
+  summary { cursor: pointer; color: var(--txt); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  td { padding: 4px 6px; border-bottom: 1px solid #222a44; vertical-align: top; }
+  td:first-child { color: var(--txt); white-space: nowrap; }
+  kbd { background: #2b3557; border-radius: 5px; padding: 1px 6px; font-size: 12px; color: var(--txt); }
+  #load { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 11; background: var(--bg); }
+  .bar { width: min(360px, 80vw); height: 10px; border-radius: 6px; background: #222a44; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: var(--acc); transition: width .15s; }
+  #msg { color: var(--mut); font-size: 14px; }
+  #hud { position: fixed; left: 10px; bottom: 10px; z-index: 5; font: 12px ui-monospace, monospace; color: #fff8; pointer-events: none; display: none; }
+  #err { position: fixed; right: 10px; top: 10px; max-width: min(520px, 90vw); z-index: 6; background: #3a0d12ee; color: #ffd6d6; border: 1px solid #ff6b6b;
+         border-radius: 10px; padding: 8px 10px; font: 12px ui-monospace, monospace; display: none; white-space: pre-wrap; max-height: 40vh; overflow: auto; }
+  #tip { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 5; background: #000a; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 13px; display: none; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="start">
+  <div class="card">
+    <div class="head">
+      <img src="data:image/png;base64,{{ICON}}" alt="">
+      <div>
+        <h1>{{TITLE}}</h1>
+        <p class="sub">{{SUBTITLE}}</p>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="big" id="bPC">🖥️ Jogar no PC (mouse + teclado / controle)</button>
+      <button class="big alt" id="bVR">📱 VR Box (celular no óculos)</button>
+      <button class="big alt" id="bXR" disabled>🥽 Óculos VR (WebXR)</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="oShadow"> Sombras</label>
+      <label><input type="checkbox" id="oCam"> 📷 Mãos pela câmera (hand tracking)</label>
+    </div>
+    <details>
+      <summary>Controles</summary>
+      <table>
+        <tr><td><kbd>Mouse</kbd></td><td>olhar (clique na tela para prender o mouse)</td></tr>
+        <tr><td><kbd>W A S D</kbd></td><td>andar (analógico do Joy-Con)</td></tr>
+        <tr><td><kbd>Botão direito</kbd> / <kbd>E</kbd></td><td>pegar / segurar com a mão direita (R)</td></tr>
+        <tr><td><kbd>Botão esquerdo</kbd></td><td>gatilho direito (ZR): atirar / bater / usar</td></tr>
+        <tr><td><kbd>Q</kbd> · <kbd>F</kbd></td><td>pegar com a esquerda (L) · gatilho esquerdo (ZL)</td></tr>
+        <tr><td><kbd>Espaço</kbd> · <kbd>R</kbd></td><td>botão A · botão baixo/X</td></tr>
+        <tr><td><kbd>V</kbd> · <kbd>C</kbd></td><td>soco com a mão direita · esquerda</td></tr>
+        <tr><td><kbd>Roda do mouse</kbd></td><td>esticar / recolher as mãos</td></tr>
+        <tr><td><kbd>Tab</kbd> / <kbd>M</kbd></td><td>menu do jogo (botão −)</td></tr>
+        <tr><td>Joy-Con / controle</td><td>funciona direto (Bluetooth). Use "Calibrar Joy-Con" no menu do jogo para mapear os botões.</td></tr>
+        <tr><td>VR Box</td><td>vire a cabeça para olhar (giroscópio); toque na tela ou aperte A para clicar no menu.</td></tr>
+      </table>
+    </details>
+  </div>
+</div>
+<div id="load"><div style="font-weight:800;font-size:18px">{{TITLE}}</div><div class="bar"><div id="prog"></div></div><div id="msg">carregando…</div></div>
+<div id="hud"></div>
+<div id="err"></div>
+<div id="tip"></div>
+
+<!--LIBS-->
+<!--RUNTIME-->
+<!--DATA-->
+<script>
+(function () {
+  'use strict';
+  const W = window.EMRWEB;
+  const $ = (id) => document.getElementById(id);
+  const DATA = JSON.parse(document.getElementById('emr-data').textContent);
+  W.app = DATA.app;
+  W.app.scripts = DATA.scripts;
+  W.coreLua = DATA.core;
+  W.input.virtualHands = !!DATA.web.virtualHands;
+
+  // ------- assets embutidos (base64 -> Blob URL sob demanda) -------
+  const blobs = new Map();
+  function mime(p) {
+    if (/\.png$/i.test(p)) return 'image/png';
+    if (/\.jpe?g$/i.test(p)) return 'image/jpeg';
+    if (/\.wav$/i.test(p)) return 'audio/wav';
+    if (/\.ogg$/i.test(p)) return 'audio/ogg';
+    return 'application/octet-stream';
+  }
+  function bytes(b64) {
+    const bin = atob(b64);
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  }
+  W.assets = {
+    has: (p) => Object.prototype.hasOwnProperty.call(DATA.assets, p),
+    list: () => Object.keys(DATA.assets),
+    url(p) {
+      if (!this.has(p)) return null;
+      let u = blobs.get(p);
+      if (!u) { u = URL.createObjectURL(new Blob([bytes(DATA.assets[p])], { type: mime(p) })); blobs.set(p, u); }
+      return u;
+    },
+    async arrayBuffer(p) { return bytes(DATA.assets[p]).buffer; },
+  };
+
+  // ------- erros visiveis (para o jogador reportar) -------
+  const errBox = $('err');
+  let errCount = 0;
+  W.onError = function (msg) {
+    errCount++;
+    if (errCount > 6) return;
+    errBox.style.display = 'block';
+    errBox.textContent += (errBox.textContent ? '\n' : '') + String(msg).slice(0, 600);
+    setTimeout(() => { if (errCount <= 6) errBox.style.display = 'none'; }, 12000);
+  };
+  window.addEventListener('error', (e) => W.onError(e.message));
+
+  if (navigator.xr && navigator.xr.isSessionSupported) {
+    navigator.xr.isSessionSupported('immersive-vr').then((ok) => { $('bXR').disabled = !ok; }).catch(() => {});
+  }
+  const mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  $('oShadow').checked = !mobile;
+  if (mobile) { $('bVR').classList.remove('alt'); $('bPC').classList.add('alt'); }
+
+  let started = false;
+  async function go(mode) {
+    if (started) return;
+    started = true;
+    $('start').style.display = 'none';
+    $('load').style.display = 'flex';
+    const prog = (f, m) => { $('prog').style.width = Math.round(f * 100) + '%'; if (m) $('msg').textContent = m; };
+    try {
+      W.audio.init();
+      W.audio.resume();
+      if (mode === 'vrbox') {
+        try { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+        try { await screen.orientation.lock('landscape'); } catch (e) {}
+        await W.input.enableGyro();
+      }
+      prog(0.05, 'carregando bibliotecas…');
+      if (!W.CANNON) W.CANNON = await import(URL.createObjectURL(new Blob([document.getElementById('lib-cannon').textContent], { type: 'text/javascript' })));
+      prog(0.15, 'carregando sons…');
+      await W.audio.preload((f) => prog(0.15 + f * 0.6));
+      prog(0.8, 'iniciando o jogo…');
+      const wasm = URL.createObjectURL(new Blob([bytes(DATA.wasm)], { type: 'application/wasm' }));
+      W.input.mode = mode === 'xr' ? 'desktop' : mode;
+      W.input.attach($('c'));
+      await W.start({ canvas: $('c'), wasmUrl: wasm, shadows: $('oShadow').checked, mobile });
+      if (mode === 'xr') await W.input.enterXR();
+      if ($('oCam').checked) {
+        const tip = $('tip');
+        tip.style.display = 'block';
+        W.input.enableCameraHands((s) => { tip.textContent = s; }).then(() => setTimeout(() => { tip.style.display = 'none'; }, 3000));
+      }
+      $('load').style.display = 'none';
+      if (mode === 'desktop') {
+        const tip = $('tip');
+        tip.textContent = 'Clique na tela para olhar com o mouse · Tab = menu';
+        tip.style.display = 'block';
+        setTimeout(() => { tip.style.display = 'none'; }, 5000);
+      }
+      const hud = $('hud');
+      if (/[?&]fps/.test(location.search)) {
+        hud.style.display = 'block';
+        let acc = 0, n = 0;
+        W.onFrame = (dt) => { acc += dt; n++; if (acc > 0.5) { hud.textContent = Math.round(n / acc) + ' fps · lua+host ' + W.frameMs.toFixed(1) + ' ms · ' + W.nodes.size + ' obj'; acc = 0; n = 0; } };
+      }
+      W.ready = true;
+    } catch (e) {
+      console.error(e);
+      $('msg').textContent = 'erro: ' + e.message;
+      W.onError(e.stack || e.message);
+    }
+  }
+  $('bPC').onclick = () => go('desktop');
+  $('bVR').onclick = () => go('vrbox');
+  $('bXR').onclick = () => go('xr');
+  W.go = go;   // usado pelos testes automaticos
+})();
+</script>
+</body>
+</html>
